@@ -3,192 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق تواصل - دخول وإنشاء حساب</title>
+    <title>تطبيق تواصل مباشر</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        
-        /* الحاويات */
-        .container { background: white; width: 350px; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
-        .hidden { display: none !important; }
-        
-        /* المدخلات والأزرار */
-        input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; outline: none; }
-        .btn-main { width: 100%; padding: 12px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; font-size: 16px; margin-top: 10px; }
-        .btn-login { background-color: #1877f2; }
-        .btn-signup { background-color: #42b72a; }
-        .btn-google { background-color: #db4437; margin-top: 10px; }
-        
-        /* الروابط والنصوص */
-        .switch-link { color: #1877f2; cursor: pointer; text-decoration: underline; display: block; margin-top: 15px; font-size: 14px; }
-        .error-msg { color: red; font-size: 13px; margin-top: 10px; display: none; background: #ffebeb; padding: 5px; border-radius: 4px; border: 1px solid red; }
-        
-        /* الشاشة الرئيسية */
-        .app-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-        .profile-pic { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #42b72a; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f9; padding: 20px; text-align: center; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h2 { color: #333; }
+        input { padding: 10px; width: 70%; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #218838; }
+        .user-card, .request-card { border: 1px solid #ddd; padding: 10px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; border-radius: 5px; }
+        .btn-add { background: #007bff; }
+        .btn-accept { background: #28a745; }
+        .section { margin-top: 30px; text-align: right; }
+        .hidden { display: none; }
+        #status { color: red; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <!-- 1. نموذج تسجيل الدخول -->
-    <div id="login-form" class="container">
-        <h2>تسجيل الدخول</h2>
-        <input type="email" id="login-email" placeholder="البريد الإلكتروني">
-        <input type="password" id="login-pass" placeholder="كلمة المرور">
-        
-        <button class="btn-main btn-login" onclick="loginUser()">دخول</button>
-        <button class="btn-main btn-google" onclick="loginGoogle()">دخول عبر Google</button>
-        
-        <div id="login-error" class="error-msg"></div>
-        <p class="switch-link" onclick="showSignup()">ليس لديك حساب؟ إنشاء حساب جديد</p>
-    </div>
-
-    <!-- 2. نموذج إنشاء حساب جديد -->
-    <div id="signup-form" class="container hidden">
-        <h2>إنشاء حساب جديد</h2>
-        <input type="text" id="signup-name" placeholder="الاسم الكامل">
-        <input type="email" id="signup-email" placeholder="البريد الإلكتروني">
-        <input type="password" id="signup-pass" placeholder="كلمة المرور (6 أحرف ع الأقل)">
-        
-        <button class="btn-main btn-signup" onclick="createUser()">إنشاء حساب</button>
-        
-        <div id="signup-error" class="error-msg"></div>
-        <p class="switch-link" onclick="showLogin()">لديك حساب بالفعل؟ تسجيل دخول</p>
-    </div>
-
-    <!-- 3. شاشة التطبيق (بعد الدخول) -->
-    <div id="app-screen" class="container hidden" style="width: 400px;">
-        <div class="app-header">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <img id="user-img" src="https://via.placeholder.com/50" class="profile-pic">
-                <div>
-                    <h4 id="user-name" style="margin:0;">الاسم</h4>
-                    <span style="font-size: 12px; color: green;">● متصل</span>
-                </div>
-            </div>
-            <button onclick="logout()" style="background:#eee; border:none; padding:5px 10px; cursor:pointer; border-radius:5px;">خروج</button>
+    <div class="container">
+        <!-- شاشة الدخول -->
+        <div id="loginScreen">
+            <h2>تسجيل الدخول</h2>
+            <input type="text" id="usernameInput" placeholder="اكتب اسمك هنا...">
+            <button onclick="login()">دخول</button>
         </div>
-        <hr>
-        <p>مرحباً بك في التطبيق! تم تسجيل الدخول بنجاح.</p>
+
+        <!-- الشاشة الرئيسية -->
+        <div id="appScreen" class="hidden">
+            <h3 id="welcomeMsg"></h3>
+            
+            <!-- طلبات الصداقة الواردة -->
+            <div class="section">
+                <h4>🔔 طلبات الصداقة الواردة:</h4>
+                <div id="requestsList">لا يوجد طلبات حالياً</div>
+            </div>
+
+            <!-- قائمة الأصدقاء -->
+            <div class="section">
+                <h4>✅ أصدقاؤك:</h4>
+                <div id="friendsList">لا يوجد أصدقاء بعد</div>
+            </div>
+
+            <!-- كل المستخدمين -->
+            <div class="section">
+                <h4>👥 مستخدمون آخرون (أونلاين):</h4>
+                <div id="allUsersList">جاري التحميل...</div>
+            </div>
+        </div>
+        <p id="status"></p>
     </div>
 
-    <!-- مكتبات Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <!-- ربط Firebase -->
+    <script type="module">
+        // استيراد الدوال اللازمة من مكتبة فايربيس
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getDatabase, ref, set, onValue, push, update, remove, child, get } 
+        from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-    <script>
-        // =======================================================
-        // ⚠️⚠️ ضع إعدادات مشروعك هنا لكي يعمل الزر ⚠️⚠️
-        // =======================================================
+        // -----------------------------------------------------------
+        // ⚠️⚠️ ضع إعدادات مشروعك هنا بدلاً من الأكواد أدناه ⚠️⚠️
+        // -----------------------------------------------------------
         const firebaseConfig = {
-            apiKey: "AIzaSy.......PLACE_YOUR_API_KEY_HERE.......",
+            apiKey: "AIzaSyDxxxxxxxxx-xxxxxxxx",
             authDomain: "your-project.firebaseapp.com",
+            databaseURL: "https://your-project-default-rtdb.firebaseio.com",
             projectId: "your-project",
             storageBucket: "your-project.appspot.com",
-            messagingSenderId: "123456",
-            appId: "1:123456:web:xxxxx"
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:xxxxxx"
         };
+        // -----------------------------------------------------------
 
-        // تهيئة Firebase
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
+        // تهيئة التطبيق
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
 
-        // --- دوال التبديل بين الشاشات ---
-        function showSignup() {
-            document.getElementById('login-form').classList.add('hidden');
-            document.getElementById('signup-form').classList.remove('hidden');
-            clearErrors();
-        }
+        let myId = localStorage.getItem('myUserId');
+        let myName = localStorage.getItem('myUserName');
 
-        function showLogin() {
-            document.getElementById('signup-form').classList.add('hidden');
-            document.getElementById('login-form').classList.remove('hidden');
-            clearErrors();
-        }
+        // دالة تسجيل الدخول
+        window.login = function() {
+            const nameInput = document.getElementById('usernameInput').value;
+            if (!nameInput) return alert("الرجاء كتابة الاسم");
 
-        function clearErrors() {
-            document.getElementById('login-error').style.display = 'none';
-            document.getElementById('signup-error').style.display = 'none';
-        }
-
-        // --- 1. دالة إنشاء حساب جديد ---
-        function createUser() {
-            const name = document.getElementById('signup-name').value;
-            const email = document.getElementById('signup-email').value;
-            const pass = document.getElementById('signup-pass').value;
-            const errorDiv = document.getElementById('signup-error');
-
-            if(name === "" || email === "" || pass === "") {
-                errorDiv.innerText = "يرجى ملء جميع الحقول";
-                errorDiv.style.display = 'block';
-                return;
+            // إنشاء ID عشوائي للمستخدم إذا لم يكن موجوداً
+            if (!myId) {
+                myId = 'user_' + Date.now();
+                localStorage.setItem('myUserId', myId);
             }
+            myName = nameInput;
+            localStorage.setItem('myUserName', myName);
 
-            auth.createUserWithEmailAndPassword(email, pass)
-                .then((userCredential) => {
-                    // تم الإنشاء بنجاح، الآن نحفظ الاسم
-                    userCredential.user.updateProfile({
-                        displayName: name,
-                        photoURL: "https://ui-avatars.com/api/?name=" + name + "&background=random" // صورة تلقائية بالحروف
-                    }).then(() => {
-                        // تحديث الصفحة لظهور الاسم
-                        location.reload(); 
+            // حفظ المستخدم في قاعدة البيانات
+            set(ref(db, 'users/' + myId), {
+                username: myName,
+                id: myId,
+                status: 'online'
+            }).then(() => {
+                showApp();
+            });
+        }
+
+        // عرض التطبيق وإخفاء تسجيل الدخول
+        function showApp() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('appScreen').classList.remove('hidden');
+            document.getElementById('welcomeMsg').innerText = `مرحباً بك، ${myName}`;
+            
+            loadUsers();
+            loadRequests();
+            loadFriends();
+        }
+
+        // 1. تحميل قائمة المستخدمين (LIVE)
+        function loadUsers() {
+            const usersRef = ref(db, 'users');
+            onValue(usersRef, (snapshot) => {
+                const usersListDiv = document.getElementById('allUsersList');
+                usersListDiv.innerHTML = "";
+                const data = snapshot.val();
+
+                if (data) {
+                    Object.values(data).forEach(user => {
+                        // لا تعرض نفسك في القائمة
+                        if (user.id !== myId) {
+                            // تحقق ما إذا كان صديقاً بالفعل
+                            get(ref(db, `friends/${myId}/${user.id}`)).then((friendSnap) => {
+                                if(!friendSnap.exists()) {
+                                    const div = document.createElement('div');
+                                    div.className = 'user-card';
+                                    div.innerHTML = `
+                                        <span>👤 ${user.username}</span>
+                                        <button class="btn-add" onclick="sendRequest('${user.id}', '${user.username}')">إضافة صديق</button>
+                                    `;
+                                    usersListDiv.appendChild(div);
+                                }
+                            });
+                        }
                     });
-                })
-                .catch((error) => {
-                    let msg = error.message;
-                    if(error.code === 'auth/email-already-in-use') msg = "هذا البريد مسجل بالفعل، حاول تسجيل الدخول.";
-                    if(error.code === 'auth/weak-password') msg = "كلمة المرور ضعيفة (يجب أن تكون 6 أحرف على الأقل).";
-                    if(error.code === 'auth/invalid-email') msg = "البريد الإلكتروني غير صحيح.";
-                    errorDiv.innerText = msg;
-                    errorDiv.style.display = 'block';
-                });
+                } else {
+                    usersListDiv.innerHTML = "لا يوجد مستخدمين آخرين.";
+                }
+            });
         }
 
-        // --- 2. دالة تسجيل الدخول ---
-        function loginUser() {
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-pass').value;
-            const errorDiv = document.getElementById('login-error');
-
-            auth.signInWithEmailAndPassword(email, pass)
-                .catch((error) => {
-                    let msg = "خطأ في البريد أو كلمة السر";
-                    if(error.code === 'auth/user-not-found') msg = "لا يوجد حساب لهذا البريد.";
-                    if(error.code === 'auth/wrong-password') msg = "كلمة المرور خطأ.";
-                    errorDiv.innerText = msg;
-                    errorDiv.style.display = 'block';
-                });
+        // 2. إرسال طلب صداقة
+        window.sendRequest = function(targetId, targetName) {
+            // إضافة الطلب في قائمة الطلبات لدى الشخص الآخر
+            // المسار: requests -> TargetID -> MyID
+            set(ref(db, `requests/${targetId}/${myId}`), {
+                fromName: myName,
+                fromId: myId
+            }).then(() => {
+                alert(`تم إرسال طلب إلى ${targetName}`);
+            }).catch(err => console.error(err));
         }
 
-        // --- 3. تسجيل دخول جوجل (اختياري) ---
-        function loginGoogle() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).catch(e => alert(e.message));
+        // 3. استقبال الطلبات (LIVE)
+        function loadRequests() {
+            const requestsRef = ref(db, `requests/${myId}`);
+            onValue(requestsRef, (snapshot) => {
+                const list = document.getElementById('requestsList');
+                list.innerHTML = "";
+                const data = snapshot.val();
+
+                if (data) {
+                    Object.values(data).forEach(req => {
+                        const div = document.createElement('div');
+                        div.className = 'request-card';
+                        div.style.borderColor = "#ffc107";
+                        div.innerHTML = `
+                            <span>📩 طلب من: <b>${req.fromName}</b></span>
+                            <button class="btn-accept" onclick="acceptRequest('${req.fromId}', '${req.fromName}')">موافقة</button>
+                        `;
+                        list.appendChild(div);
+                    });
+                } else {
+                    list.innerHTML = "لا توجد طلبات جديدة.";
+                }
+            });
         }
 
-        // --- 4. تسجيل الخروج ---
-        function logout() {
-            auth.signOut();
+        // 4. قبول الطلب
+        window.acceptRequest = function(friendId, friendName) {
+            // 1. إضافة الشخص لقائمتي
+            const updates = {};
+            updates[`friends/${myId}/${friendId}`] = { name: friendName };
+            // 2. إضافتي لقائمة الشخص الآخر
+            updates[`friends/${friendId}/${myId}`] = { name: myName };
+            // 3. حذف الطلب
+            updates[`requests/${myId}/${friendId}`] = null;
+
+            update(ref(db), updates).then(() => {
+                alert("تمت الموافقة! أصبحتما أصدقاء.");
+            });
         }
 
-        // --- مراقب الحالة (يحدد أي شاشة تظهر) ---
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                // المستخدم مسجل -> اظهر التطبيق واخفِ نماذج الدخول
-                document.getElementById('login-form').classList.add('hidden');
-                document.getElementById('signup-form').classList.add('hidden');
-                document.getElementById('app-screen').classList.remove('hidden');
-                
-                // عرض البيانات
-                document.getElementById('user-name').innerText = user.displayName || user.email;
-                document.getElementById('user-img').src = user.photoURL || "https://ui-avatars.com/api/?name=" + (user.displayName || "User");
-            } else {
-                // المستخدم غير مسجل -> اظهر نموذج الدخول
-                document.getElementById('app-screen').classList.add('hidden');
-                document.getElementById('login-form').classList.remove('hidden');
-            }
-        });
+        // 5. تحميل قائمة الأصدقاء (LIVE)
+        function loadFriends() {
+            const friendsRef = ref(db, `friends/${myId}`);
+            onValue(friendsRef, (snapshot) => {
+                const list = document.getElementById('friendsList');
+                list.innerHTML = "";
+                const data = snapshot.val();
+
+                if (data) {
+                    Object.values(data).forEach(friend => {
+                        const div = document.createElement('div');
+                        div.className = 'user-card';
+                        div.style.backgroundColor = "#e8f5e9";
+                        div.innerHTML = `<span>✅ ${friend.name}</span>`;
+                        list.appendChild(div);
+                    });
+                }
+            });
+        }
+
+        // التحقق من وجود جلسة سابقة
+        if(myId && myName) {
+            showApp();
+        }
     </script>
 </body>
 </html>
