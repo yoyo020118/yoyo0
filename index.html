@@ -1,14 +1,275 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar">
 <head>
-<meta charset="UTF-8">
-<title>تسجيل Google</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>متصفح مصغّر - مميزاتي</title>
+<style>
+  :root{--bg:#0b1220;--panel:#0f1724;--muted:#94a3b8;--accent:#06b6d4}
+  *{box-sizing:border-box;font-family:Inter, system-ui, Arial}
+  body{margin:0;background:linear-gradient(180deg,#071124,#08131a);color:#e6eef5}
+  .app{max-width:1200px;margin:12px auto;padding:12px;display:grid;grid-template-columns:360px 1fr;gap:12px}
+  header{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--panel);border-radius:10px}
+  header h1{margin:0;font-size:16px}
+  .sidebar{background:var(--panel);padding:12px;border-radius:10px;height:80vh;overflow:auto}
+  .main{background:var(--panel);padding:10px;border-radius:10px;height:80vh;display:flex;flex-direction:column}
+  .address{display:flex;gap:8px;margin-bottom:8px}
+  .address input{flex:1;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit}
+  .address button{padding:8px 10px;border-radius:6px;border:none;background:var(--accent);color:#022}
+  .iframe-wrap{flex:1;background:#02111a;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.03)}
+  iframe{width:100%;height:100%;border:0}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+  .tab{padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:6px;cursor:pointer}
+  .tab.active{background:linear-gradient(90deg,var(--accent),#7c3aed);color:#022}
+  .section-title{font-size:14px;margin:8px 0;color:var(--muted)}
+  .extensions-list{display:flex;flex-direction:column;gap:8px}
+  .ext-card{display:flex;gap:8px;align-items:center;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02)}
+  .ext-card img{width:40px;height:40px;border-radius:8px;object-fit:cover}
+  .ext-actions{margin-left:auto;display:flex;gap:6px}
+  .btn{padding:6px 8px;border-radius:6px;border:none;cursor:pointer;background:rgba(255,255,255,0.03)}
+  .btn.primary{background:var(--accent);color:#022}
+  .form-row{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+  input[type="text"], textarea{padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+  .small{font-size:13px;color:var(--muted)}
+  footer{grid-column:1/-1;margin-top:8px;text-align:center;color:var(--muted);font-size:13px}
+  @media(max-width:900px){.app{grid-template-columns:1fr;}.sidebar{height:auto}.main{height:auto}}
+</style>
 </head>
 <body>
-<h2>تسجيل الدخول باستخدام Google</h2>
-<button id="btnGoogle">تسجيل دخول بـ Google</button>
-<div id="userInfo"></div>
+  <div class="app" dir="rtl">
+    <header>
+      <h1>المتصفح المصغّر — مميزاتك</h1>
+      <div class="small">احفظ الإضافات في المتصفح وشارك لي JSON الإضافة لأدراجها</div>
+    </header>
 
-<script type="module" src="app.js"></script>
+    <aside class="sidebar">
+      <div class="section-title">التبويبات</div>
+      <div class="tabs" id="tabs"></div>
+      <div style="margin-top:12px">
+        <button class="btn primary" id="newTabBtn">+ تبويب جديد</button>
+        <button class="btn" id="closeTabBtn">إغلاق التبويب النشط</button>
+      </div>
+
+      <hr style="margin:12px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)"/>
+
+      <div class="section-title">الإضافات / المميزات</div>
+      <div id="extensions" class="extensions-list"></div>
+
+      <div style="margin-top:12px" class="section-title">إضافة إضافة جديدة</div>
+      <div id="addExtForm">
+        <div class="form-row"><input id="extName" type="text" placeholder="اسم الإضافة (مثلاً: مترجم)"></div>
+        <div class="form-row"><input id="extIcon" type="text" placeholder="رابط أيقونة (اختياري)"></div>
+        <div class="form-row"><input id="extLink" type="text" placeholder="رابط قابل للفتح (مثلاً صفحة أداة)"></div>
+        <div class="form-row"><textarea id="extDesc" rows="2" placeholder="وصف قصير"></textarea></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn primary" id="addExtBtn">أضف الإضافة</button>
+          <button class="btn" id="exportExtBtn" title="نسخ JSON">نسخ JSON</button>
+        </div>
+        <div class="small" style="margin-top:8px">ممكن ترسل لي JSON الإضافة التي تنتجها لأضيفها لك على النسخة الرئيسية.</div>
+      </div>
+
+    </aside>
+
+    <main class="main">
+      <div class="address">
+        <input id="urlInput" placeholder="أدخل رابط ثم اضغط افتح (مثال: https://example.com)" />
+        <button id="openBtn">افتح</button>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+        <div class="small">Bookmarks:</div>
+        <select id="bookmarks" style="flex:1;padding:6px;border-radius:6px;background:transparent;color:inherit;border:1px solid rgba(255,255,255,0.04)"></select>
+        <button class="btn" id="addBookmarkBtn">حفظ</button>
+      </div>
+
+      <div class="iframe-wrap">
+        <iframe id="webview" sandbox="allow-forms allow-same-origin allow-scripts allow-popups"></iframe>
+      </div>
+    </main>
+
+  </div>
+
+  <footer>نسخة تجريبية — احفظ إضافاتك في JSON و أرسلها لي لأدرجها في الصفحة الرئيسية.</footer>
+
+<script>
+/* ===== بيانات افتراضية و localStorage ====== */
+const STORE_KEY = 'mini_browser_v1';
+let state = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
+if(!state.tabs) state.tabs = [{id: genId(), url: 'https://example.com', title: 'مثال'}];
+if(!state.activeTab) state.activeTab = state.tabs[0].id;
+if(!state.extensions) state.extensions = [
+  {id: genId(), name:'محول نص', icon:'https://via.placeholder.com/64/0a84ff/fff?text=T', link:'https://translate.google.com', desc:'محول نص سريع (يفتح صفحة خارجية)'},
+  {id: genId(), name:'مترجم', icon:'https://via.placeholder.com/64/22c55e/fff?text=A', link:'https://www.bing.com/translator', desc:'مترجم بديل'}
+];
+if(!state.bookmarks) state.bookmarks = [];
+
+saveState();
+
+const tabsEl = document.getElementById('tabs');
+const webview = document.getElementById('webview');
+const urlInput = document.getElementById('urlInput');
+const openBtn = document.getElementById('openBtn');
+const newTabBtn = document.getElementById('newTabBtn');
+const closeTabBtn = document.getElementById('closeTabBtn');
+const extensionsEl = document.getElementById('extensions');
+const addExtBtn = document.getElementById('addExtBtn');
+const exportExtBtn = document.getElementById('exportExtBtn');
+const extName = document.getElementById('extName');
+const extIcon = document.getElementById('extIcon');
+const extLink = document.getElementById('extLink');
+const extDesc = document.getElementById('extDesc');
+const bookmarksSel = document.getElementById('bookmarks');
+const addBookmarkBtn = document.getElementById('addBookmarkBtn');
+
+/* ===== دوال مساعدة ===== */
+function genId(){ return 'i'+Math.random().toString(36).slice(2,9); }
+function saveState(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); renderAll(); }
+function normalizeUrl(u){
+  if(!u) return '';
+  if(/^(http|https):\/\//.test(u)) return u;
+  return 'https://' + u;
+}
+
+/* ===== التابز ===== */
+function renderTabs(){
+  tabsEl.innerHTML = '';
+  state.tabs.forEach(t=>{
+    const d = document.createElement('div');
+    d.className = 'tab' + (t.id===state.activeTab? ' active':'');
+    d.textContent = t.title || t.url;
+    d.dataset.id = t.id;
+    d.onclick = ()=>{ state.activeTab = t.id; saveState(); }
+    tabsEl.appendChild(d);
+  });
+}
+
+/* ===== الإضافات ===== */
+function renderExtensions(){
+  extensionsEl.innerHTML = '';
+  state.extensions.forEach(e=>{
+    const card = document.createElement('div'); card.className='ext-card';
+    card.innerHTML = `<img src="${e.icon||'https://via.placeholder.com/64/999/fff?text=+'}" alt="">
+      <div>
+        <div style="font-weight:700">${e.name}</div>
+        <div class="small">${e.desc||''}</div>
+      </div>
+      <div class="ext-actions">
+        <button class="btn" onclick="openExt('${e.link}')">فتح</button>
+        <button class="btn" onclick="copyExtJson('${e.id}')">نسخ</button>
+        <button class="btn" onclick="removeExt('${e.id}')">حذف</button>
+      </div>`;
+    extensionsEl.appendChild(card);
+  });
+}
+
+/* ===== فتح/حفظ التبويب ===== */
+function openActiveTab(){
+  const t = state.tabs.find(x=>x.id===state.activeTab);
+  if(!t) return;
+  webview.src = t.url;
+  urlInput.value = t.url;
+}
+function addTab(url){
+  const id = genId();
+  state.tabs.push({id, url: normalizeUrl(url), title: (url||'تبويب')});
+  state.activeTab = id;
+  saveState();
+}
+function closeActiveTab(){
+  if(state.tabs.length<=1) return alert('لا يمكن حذف التبويب الأخير');
+  state.tabs = state.tabs.filter(x=>x.id!==state.activeTab);
+  state.activeTab = state.tabs[0].id;
+  saveState();
+}
+
+/* ===== إضافات ===== */
+function addExtension(name, icon, link, desc){
+  const id = genId();
+  state.extensions.push({id,name,icon,link,desc});
+  saveState();
+}
+function removeExt(id){ state.extensions = state.extensions.filter(e=>e.id!==id); saveState(); }
+function openExt(link){
+  // نفتح الإضافة كرابط جديد في تبويب نشط أو جديد
+  if(!link) return alert('لا يوجد رابط');
+  state.tabs.find(t=>t.id===state.activeTab).url = normalizeUrl(link);
+  saveState();
+}
+function copyExtJson(id){
+  const e = state.extensions.find(x=>x.id===id);
+  if(!e) return;
+  const out = JSON.stringify({name:e.name,icon:e.icon,link:e.link,desc:e.desc},null,2);
+  navigator.clipboard.writeText(out).then(()=>alert('تم نسخ JSON الإضافة للحافظة'));
+}
+
+/* ===== bookmarks ===== */
+function renderBookmarks(){
+  bookmarksSel.innerHTML = '';
+  const opt = document.createElement('option'); opt.value=''; opt.textContent='اختر عنصر'; bookmarksSel.appendChild(opt);
+  state.bookmarks.forEach(b=>{
+    const o = document.createElement('option'); o.value=b.link; o.textContent=b.title; bookmarksSel.appendChild(o);
+  });
+}
+function addBookmark(){
+  const t = state.tabs.find(x=>x.id===state.activeTab);
+  if(!t) return;
+  state.bookmarks.push({title:t.title||t.url,link:t.url});
+  saveState();
+}
+
+/* ===== export ext (نسخ JSON من الحقول) ===== */
+exportExtBtn.addEventListener('click', ()=>{
+  const obj = {name: extName.value, icon: extIcon.value, link: extLink.value, desc: extDesc.value};
+  navigator.clipboard.writeText(JSON.stringify(obj,null,2)).then(()=>alert('تم نسخ JSON إلى الحافظة — أرسله لي لأدرجه'));
+});
+
+/* ===== أحداث DOM ===== */
+openBtn.onclick = ()=> {
+  const url = normalizeUrl(urlInput.value);
+  const t = state.tabs.find(x=>x.id===state.activeTab);
+  if(t){ t.url = url; t.title = url; saveState(); } else addTab(url);
+};
+newTabBtn.onclick = ()=> { addTab('https://example.com'); };
+closeTabBtn.onclick = ()=> { closeActiveTab(); };
+addExtBtn.onclick = ()=> {
+  const name = extName.value.trim(); const icon = extIcon.value.trim(); const link = extLink.value.trim(); const desc = extDesc.value.trim();
+  if(!name || !link) return alert('الاسم والرابط مطلوبان');
+  addExtension(name, icon, normalizeUrl(link), desc);
+  extName.value=''; extIcon.value=''; extLink.value=''; extDesc.value='';
+};
+addBookmarkBtn.onclick = addBookmark;
+bookmarksSel.onchange = ()=> {
+  const v = bookmarksSel.value; if(v) { const t = state.tabs.find(x=>x.id===state.activeTab); t.url = v; saveState(); }
+};
+
+/* ===== render all ===== */
+function renderAll(){
+  renderTabs();
+  renderExtensions();
+  renderBookmarks();
+  openActiveTab();
+}
+renderAll();
+
+/* ===== استقبال JSON من المستخدم (لو ألصقته وسأدرجه لاحقاً) ===== */
+window.insertExtFromJson = function(jsonText){
+  try{
+    const o = typeof jsonText === 'string' ? JSON.parse(jsonText) : jsonText;
+    if(!o.name || !o.link) return alert('JSON غير صالح — لازم يحتوي name و link');
+    addExtension(o.name, o.icon||'', normalizeUrl(o.link), o.desc||'');
+    alert('تم إدراج الإضافة محلياً');
+  }catch(e){ alert('فشل في قراءة JSON'); }
+}
+
+/* ===== حفظ حالة iframe عند الانتقال بين الصفحات ===== */
+webview.addEventListener('load', ()=>{
+  // حاول تحديث عنوان التبويب اعتماداً على عنوان الصفحة (قد يكون cross-origin مقيد)
+  try{
+    const t = state.tabs.find(x=>x.id===state.activeTab);
+    const title = webview.contentDocument?.title;
+    if(title) { t.title = title; saveState(); }
+  }catch(e){}
+});
+</script>
 </body>
 </html>
