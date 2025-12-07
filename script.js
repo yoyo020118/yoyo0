@@ -1,22 +1,44 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+// استيراد Firebase من CDN
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// تهيئة Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyC08ihJ4f3arua6_pWyzimT3ndAWPVKjbc",
   authDomain: "yoyo-3b06a.firebaseapp.com",
   projectId: "yoyo-3b06a",
   storageBucket: "yoyo-3b06a.firebasestorage.app",
   messagingSenderId: "942048587610",
-  appId: "1:942048587610:web:d14af13e481ed44b198d63",
-  measurementId: "G-D99SSSVG7F"
+  appId: "1:942048587610:web:6118a870029bcb3e198d63",
+  measurementId: "G-6MPXNLDKWF"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 
+// زر تسجيل الدخول
+const btnGoogle = document.getElementById('btnGoogle');
+const userInfo = document.getElementById('userInfo');
+
+btnGoogle.addEventListener('click', () => {
+  signInWithPopup(auth, provider)
+    .then(result => {
+      const user = result.user;
+      userInfo.innerHTML = `
+        <p>مرحباً ${user.displayName}</p>
+        <img src="${user.photoURL}" width="50">
+      `;
+    })
+    .catch(err => console.error(err));
+});
+
+// متابعة تسجيل الدخول عند فتح الصفحة
+onAuthStateChanged(auth, user => {
+  if(user){
+    userInfo.innerHTML = `
+      <p>مرحباً ${user.displayName}</p>
+      <img src="${user.photoURL}" width="50">
+    `;
+  }
+});
