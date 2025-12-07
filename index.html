@@ -3,30 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>شات بسيط</title>
-    <!-- ربط ملف الـ CSS لتصميم الصفحة -->
-    <link rel="stylesheet" href="style.css">
+    <title>تسجيل دخول حقيقي - إصلاح الأخطاء</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        
+        /* تصميم صندوق الدخول */
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 320px; text-align: center; }
+        
+        .btn-google { background-color: #db4437; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; }
+        .btn-google:hover { background-color: #c23321; }
+
+        .btn-logout { background-color: #555; margin-top: 20px; }
+        
+        /* شاشات العرض */
+        #main-app { display: none; }
+        #login-screen { display: flex; flex-direction: column; }
+
+        /* منطقة الخطأ */
+        #error-box { color: #d8000c; background-color: #ffbaba; border: 1px solid #d8000c; padding: 10px; margin-top: 15px; border-radius: 5px; font-size: 13px; display: none; text-align: right; }
+        
+        .profile-img { width: 80px; height: 80px; border-radius: 50%; margin-bottom: 10px; border: 3px solid #31a24c; }
+    </style>
 </head>
 <body>
 
-    <div id="chat-container">
-        <div id="chat-header">
-            <h2>غرفة الدردشة العامة</h2>
-        </div>
-
-        <div id="messages-container">
-            <!-- الرسائل ستظهر هنا بواسطة JavaScript -->
-            <div class="message">أهلاً بك في الشات!</div>
-        </div>
-
-        <form id="message-form">
-            <input type="text" id="message-input" placeholder="اكتب رسالتك هنا..." autocomplete="off" required>
-            <button type="submit">إرسال</button>
-        </form>
+    <!-- شاشة تسجيل الدخول -->
+    <div id="login-screen" class="card">
+        <h2>تسجيل الدخول</h2>
+        <p>يرجى تسجيل الدخول للمتابعة</p>
+        <button class="btn-google" onclick="loginGoogle()">
+            <span>G</span> تسجيل الدخول بجوجل
+        </button>
+        
+        <!-- صندوق عرض الأخطاء -->
+        <div id="error-box"></div>
     </div>
 
-    <!-- ربط ملف الـ JavaScript لإضافة التفاعل -->
-    <!-- نضعه في نهاية الـ body لضمان تحميل كل عناصر الصفحة أولاً -->
-    <script src="script.js"></script>
+    <!-- شاشة التطبيق الرئيسية -->
+    <div id="main-app" class="card">
+        <img id="user-photo" class="profile-img" src="" alt="صورة المستخدم">
+        <h3>مرحباً، <span id="user-name"></span> 👋</h3>
+        <p style="color: green; font-weight: bold;">● أنت متصل الآن</p>
+        <button class="btn-google btn-logout" onclick="logout()">تسجيل الخروج</button>
+    </div>
+
+    <!-- مكتبات Firebase (الإصدار 8 المتوافق وهو الأسهل) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+    <script>
+        // ===============================================================
+        // 🔴 هام: استبدل هذا الجزء ببيانات مشروعك من Firebase Console
+        // ===============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyxxxxxxxxx_YOUR_API_KEY_HERE",
+            authDomain: "your-project-name.firebaseapp.com",
+            projectId: "your-project-name",
+            storageBucket: "your-project-name.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:xxxxxx"
+        };
+
+        // تهيئة التطبيق
+        if (!firebase.apps.length) {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                console.log("Firebase Connected ✅");
+            } catch (e) {
+                showError("خطأ في إعدادات Firebase: تأكد من نسخ الكود الصحيح.");
+            }
+        }
+        const auth = firebase.auth();
+
+        // 1. مراقبة حالة المستخدم (هل هو مسجل أم لا؟)
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // المستخدم مسجل دخوله
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                
+                // عرض البيانات
+                document.getElementById('user-name').innerText = user.displayName;
+                document.getElementById('user-photo').src = user.photoURL;
+            } else {
+                // المستخدم غير مسجل
+                document.getElementById('login-screen').style.display = 'flex';
+                document.getElementById('main-app').style.display = 'none';
+            }
+        });
+
+        // 2. دالة تسجيل الدخول
+        function loginGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            document.getElementById('error-box').style.display = 'none'; // إخفاء الخطأ السابق
+
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    console.log("تم التسجيل بنجاح:", result.user);
+                })
+                .catch((error) => {
+                    console.error("خطأ التسجيل:", error);
+                    handleErrors(error);
+                });
+        }
+
+        // 3. دالة تسجيل الخروج
+        function logout() {
+            auth.signOut();
+        }
+
+        // 4. معالجة الأخطاء وعرضها للمستخدم
+        function handleErrors(error) {
+            let msg = "حدث خطأ غير معروف.";
+            
+            if (error.code === 'auth/network-request-failed') {
+                msg = "⚠️ خطأ في الشبكة! <br> 1. تأكد من الإنترنت. <br> 2. (الأهم) تأكد أنك أضفت رابط GitHub في إعدادات Firebase Authorized Domains.";
+            } else if (error.code === 'auth/unauthorized-domain') {
+                msg = "🚫 هذا الموقع غير مصرح له. <br> اذهب إلى Firebase Console -> Auth -> Settings -> Authorized Domains وأضف رابط موقعك.";
+            } else if (error.code === 'auth/popup-closed-by-user') {
+                msg = "تم إغلاق النافذة قبل اكتمال التسجيل.";
+            } else if (error.code === 'auth/invalid-api-key') {
+                msg = "مفتاح API غير صحيح. تأكد من نسخ الإعدادات بدقة.";
+            } else {
+                msg = error.message;
+            }
+            showError(msg);
+        }
+
+        function showError(message) {
+            const box = document.getElementById('error-box');
+            box.innerHTML = message;
+            box.style.display = 'block';
+        }
+    </script>
 </body>
 </html>
