@@ -1,213 +1,242 @@
 // ==========================================
 // 1. إعدادات Firebase
 // ==========================================
-// استبدل هذا الكود ببيانات مشروعك من Firebase Console
+// ⚠️⚠️ يجب وضع بياناتك هنا بدلاً من النصوص العربية ⚠️⚠️
 const firebaseConfig = {
-    apiKey: "ضع_مفتاح_API_هنا",
+    apiKey: "ضع_مفتاح_API_هنا",  // <--- المفتاح الطويل يبدأ بـ AIza
     authDomain: "اسم-مشروعك.firebaseapp.com",
     projectId: "اسم-مشروعك",
     storageBucket: "اسم-مشروعك.appspot.com",
     messagingSenderId: "123456789",
-    appId: "1:123456789:web:xxxxxx"
+    appId: "1:xxx:xxx"
 };
 
-// تهيئة التطبيق
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+// --- فحص الأخطاء قبل البدء ---
+function checkConfig() {
+    if (firebaseConfig.apiKey.includes("ضع_مفتاح")) {
+        Swal.fire({
+            icon: 'error',
+            title: 'تنبيه هام!',
+            text: 'لم تقم بوضع إعدادات Firebase في ملف script.js. لن يعمل التطبيق بدونها.',
+            footer: '<a href="https://console.firebase.google.com" target="_blank">كيف أحصل على المفتاح؟</a>'
+        });
+        return false;
+    }
+    return true;
+}
+
+// تهيئة التطبيق بأمان
+let db;
+try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+} catch (error) {
+    console.error("Firebase Error:", error);
+}
 
 // ==========================================
-// 2. متغيرات النظام
+// 2. منطق التطبيق
 // ==========================================
 let myData = null;
 let activeChatID = null;
 let unsubscribeChat = null;
 
-// التحقق من الدخول عند تحميل الصفحة
 window.onload = function() {
-    const saved = localStorage.getItem("chatUser");
+    if (!checkConfig()) return; // إيقاف التشغيل إذا لم توجد إعدادات
+
+    const saved = localStorage.getItem("chatUserPro");
     if (saved) {
         startApp(JSON.parse(saved));
     }
 };
 
-// ==========================================
-// 3. وظائف التسجيل والدخول
-// ==========================================
+function showLoader(show) {
+    document.getElementById('loader').style.display = show ? 'flex' : 'none';
+}
+
 function registerUser() {
+    if (!checkConfig()) return;
+
     const nameInput = document.getElementById('username-input');
     const name = nameInput.value.trim();
 
-    if (!name) return alert("الرجاء كتابة اسمك!");
+    if (!name) {
+        Swal.fire('تنبيه', 'الرجاء كتابة اسمك أولاً', 'warning');
+        return;
+    }
 
-    // إنشاء ID عشوائي
+    showLoader(true);
+
     const randomID = Math.floor(1000 + Math.random() * 9000);
     const uniqueID = `${name.replace(/\s/g, '')}#${randomID}`;
-
     const userData = {
         name: name,
         id: uniqueID,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        status: 'online'
     };
 
-    // حفظ في قاعدة البيانات
     db.collection("users").doc(uniqueID).set(userData)
     .then(() => {
-        localStorage.setItem("chatUser", JSON.stringify(userData));
+        localStorage.setItem("chatUserPro", JSON.stringify(userData));
+        showLoader(false);
         startApp(userData);
+        Swal.fire({
+            icon: 'success',
+            title: 'تم التسجيل بنجاح',
+            text: `معرفك هو: ${uniqueID}`,
+            timer: 2000,
+            showConfirmButton: false
+        });
     })
     .catch((error) => {
+        showLoader(false);
+        Swal.fire('خطأ', 'تأكد من إعدادات Firebase أو اتصال الإنترنت', 'error');
         console.error(error);
-        alert("تأكد من إعدادات Firebase وتشغيل الإنترنت");
     });
 }
 
 function startApp(user) {
     myData = user;
     document.getElementById('login-screen').classList.remove('active');
-    document.getElementById('app-screen').style.display = 'flex';
+    document.getElementById('app-screen').style.display = 'flex'; // استخدام flex بدلاً من active للكلاس
 
-    // تعبئة البيانات في القائمة الجانبية
     document.getElementById('display-name').innerText = user.name;
     document.getElementById('my-unique-id').innerText = user.id;
-    document.getElementById('my-avatar').innerText = user.name.charAt(0);
+    document.getElementById('my-avatar').innerText = user.name.charAt(0).toUpperCase();
 
-    // بدء الاستماع للبيانات الحية
     listenForRequests();
     listenForFriends();
 }
 
 function logout() {
-    localStorage.removeItem("chatUser");
-    location.reload();
-}
-
-function copyMyID() {
-    navigator.clipboard.writeText(myData.id);
-    alert("تم نسخ الـ ID: " + myData.id);
-}
-
-// ==========================================
-// 4. إدارة الأصدقاء والطلبات
-// ==========================================
-function sendFriendRequest() {
-    const friendID = document.getElementById('friend-id-input').value.trim();
-    
-    if(!friendID) return alert("اكتب الـ ID أولاً");
-    if(friendID === myData.id) return alert("لا يمكنك إضافة نفسك");
-
-    // التحقق هل المستخدم موجود
-    db.collection("users").doc(friendID).get().then((doc) => {
-        if (doc.exists) {
-            // إرسال الطلب
-            db.collection("requests").add({
-                fromID: myData.id,
-                fromName: myData.name,
-                toID: friendID,
-                status: "pending"
-            }).then(() => {
-                alert("تم إرسال الطلب بنجاح!");
-                document.getElementById('friend-id-input').value = "";
-            });
-        } else {
-            alert("هذا الـ ID غير موجود، تأكد من الرقم والاسم.");
+    Swal.fire({
+        title: 'تسجيل الخروج؟',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'نعم',
+        cancelButtonText: 'إلغاء'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            localStorage.removeItem("chatUserPro");
+            location.reload();
         }
     });
 }
 
-// الاستماع للطلبات الواردة
+function copyMyID() {
+    navigator.clipboard.writeText(myData.id);
+    const Toast = Swal.mixin({
+        toast: true, position: 'top-end', showConfirmButton: false, timer: 3000
+    });
+    Toast.fire({ icon: 'success', title: 'تم نسخ الـ ID' });
+}
+
+// --- نظام الأصدقاء ---
+function sendFriendRequest() {
+    const friendID = document.getElementById('friend-id-input').value.trim();
+    if(!friendID) return Swal.fire('خطأ', 'اكتب الـ ID', 'error');
+    if(friendID === myData.id) return Swal.fire('خطأ', 'لا يمكنك إضافة نفسك', 'error');
+
+    showLoader(true);
+    db.collection("users").doc(friendID).get().then((doc) => {
+        showLoader(false);
+        if (doc.exists) {
+            db.collection("requests").add({
+                fromID: myData.id, fromName: myData.name, toID: friendID, status: "pending"
+            }).then(() => {
+                Swal.fire('تم', 'تم إرسال طلب الصداقة', 'success');
+                document.getElementById('friend-id-input').value = "";
+            });
+        } else {
+            Swal.fire('غير موجود', 'تأكد من صحة الـ ID', 'error');
+        }
+    }).catch(err => {
+        showLoader(false);
+        Swal.fire('خطأ', 'حدث خطأ في الاتصال', 'error');
+    });
+}
+
 function listenForRequests() {
-    db.collection("requests")
-        .where("toID", "==", myData.id)
-        .where("status", "==", "pending")
+    db.collection("requests").where("toID", "==", myData.id).where("status", "==", "pending")
         .onSnapshot((snapshot) => {
             const list = document.getElementById('requests-list');
             list.innerHTML = "";
-            if(snapshot.empty) list.innerHTML = "<p class='loading-text'>لا توجد طلبات جديدة.</p>";
+            if(snapshot.empty) {
+                list.innerHTML = "<p style='text-align:center;color:#999;margin-top:20px'>لا توجد طلبات</p>";
+                document.getElementById('req-badge').style.display = 'none';
+            } else {
+                document.getElementById('req-badge').style.display = 'inline-block';
+                document.getElementById('req-badge').innerText = snapshot.size;
+            }
 
             snapshot.forEach((doc) => {
                 const req = doc.data();
-                const item = document.createElement('div');
-                item.className = 'user-item';
-                item.innerHTML = `
-                    <div class="user-info">
+                const div = document.createElement('div');
+                div.className = 'user-card';
+                div.innerHTML = `
+                    <div style="flex:1">
                         <h4>${req.fromName}</h4>
-                        <small>ID: ${req.fromID}</small>
+                        <small>${req.fromID}</small>
                     </div>
-                    <button class="btn-accept" onclick="acceptRequest('${doc.id}', '${req.fromID}', '${req.fromName}')">موافقة</button>
+                    <button class="btn-main" style="width:auto; padding:5px 15px; font-size:0.8rem" 
+                    onclick="acceptRequest('${doc.id}', '${req.fromID}', '${req.fromName}')">قبول</button>
                 `;
-                list.appendChild(item);
+                list.appendChild(div);
             });
         });
 }
 
-function acceptRequest(reqDocID, friendID, friendName) {
-    // 1. تحديث حالة الطلب
-    db.collection("requests").doc(reqDocID).update({ status: "accepted" });
-
-    // 2. تسجيل الصداقة للطرفين
+function acceptRequest(reqID, fID, fName) {
     const batch = db.batch();
-    
-    // إضافته عندي
-    const myFriendRef = db.collection("users").doc(myData.id).collection("friends").doc(friendID);
-    batch.set(myFriendRef, { id: friendID, name: friendName });
-
-    // إضافتي عنده
-    const theirFriendRef = db.collection("users").doc(friendID).collection("friends").doc(myData.id);
-    batch.set(theirFriendRef, { id: myData.id, name: myData.name });
+    batch.update(db.collection("requests").doc(reqID), { status: "accepted" });
+    batch.set(db.collection("users").doc(myData.id).collection("friends").doc(fID), { id: fID, name: fName });
+    batch.set(db.collection("users").doc(fID).collection("friends").doc(myData.id), { id: myData.id, name: myData.name });
 
     batch.commit().then(() => {
-        alert("تمت الإضافة! يمكنك التحدث الآن.");
+        Swal.fire('مبروك', 'تمت الإضافة بنجاح', 'success');
         showTab('friends');
     });
 }
 
-// الاستماع لقائمة الأصدقاء
 function listenForFriends() {
     db.collection("users").doc(myData.id).collection("friends")
         .onSnapshot((snapshot) => {
             const list = document.getElementById('friends-list');
             list.innerHTML = "";
-            if(snapshot.empty) list.innerHTML = "<p class='loading-text'>أضف أصدقاء لتبدأ المحادثة.</p>";
+            if(snapshot.empty) list.innerHTML = "<p style='text-align:center;color:#999;margin-top:20px'>أضف أصدقاء لتبدأ</p>";
 
             snapshot.forEach((doc) => {
-                const friend = doc.data();
-                const item = document.createElement('div');
-                item.className = 'user-item';
-                item.onclick = () => openChat(friend.id, friend.name);
-                item.innerHTML = `
-                    <div class="avatar" style="width:40px;height:40px;font-size:16px;">${friend.name[0]}</div>
-                    <div class="user-info">
-                        <h4>${friend.name}</h4>
-                    </div>
-                    <i class="fas fa-comment-alt" style="color:#6c5ce7"></i>
+                const f = doc.data();
+                const div = document.createElement('div');
+                div.className = 'user-card';
+                div.onclick = () => openChat(f.id, f.name);
+                div.innerHTML = `
+                    <div class="avatar" style="width:40px;height:40px;font-size:1rem;margin:0 0 0 10px">${f.name[0]}</div>
+                    <div style="flex:1"><h4>${f.name}</h4></div>
+                    <i class="fas fa-comment-dots" style="color:var(--primary)"></i>
                 `;
-                list.appendChild(item);
+                list.appendChild(div);
             });
         });
 }
 
-// ==========================================
-// 5. نظام الشات
-// ==========================================
-function openChat(friendID, friendName) {
-    activeChatID = friendID;
+// --- الشات ---
+function openChat(fID, fName) {
+    activeChatID = fID;
     document.getElementById('chat-room').classList.add('active');
-    document.getElementById('chat-username').innerText = friendName;
-    document.getElementById('chat-avatar').innerText = friendName[0];
-    document.getElementById('messages-area').innerHTML = "<p style='text-align:center;margin-top:20px;color:#888'>جاري تحميل الرسائل...</p>";
+    document.getElementById('chat-username').innerText = fName;
+    document.getElementById('messages-area').innerHTML = '<div class="spinner" style="margin:20px auto"></div>';
 
-    // إنشاء معرف للمحادثة (ترتيب أبجدي لضمان توحيد الغرفة)
-    const chatDocID = [myData.id, friendID].sort().join("_");
+    const chatID = [myData.id, fID].sort().join("_");
+    if(unsubscribeChat) unsubscribeChat();
 
-    if (unsubscribeChat) unsubscribeChat();
-
-    // قراءة الرسائل
-    unsubscribeChat = db.collection("chats").doc(chatDocID).collection("messages")
+    unsubscribeChat = db.collection("chats").doc(chatID).collection("messages")
         .orderBy("timestamp", "asc")
         .onSnapshot((snapshot) => {
             const area = document.getElementById('messages-area');
             area.innerHTML = "";
-            snapshot.forEach((doc) => {
+            snapshot.forEach(doc => {
                 const msg = doc.data();
                 const div = document.createElement('div');
                 div.className = `message ${msg.senderID === myData.id ? 'sent' : 'received'}`;
@@ -221,39 +250,20 @@ function openChat(friendID, friendName) {
 function sendMessage() {
     const input = document.getElementById('msg-input');
     const text = input.value.trim();
-    
-    if (!text || !activeChatID) return;
+    if(!text || !activeChatID) return;
 
-    const chatDocID = [myData.id, activeChatID].sort().join("_");
-
-    db.collection("chats").doc(chatDocID).collection("messages").add({
-        text: text,
-        senderID: myData.id,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    const chatID = [myData.id, activeChatID].sort().join("_");
+    db.collection("chats").doc(chatID).collection("messages").add({
+        text: text, senderID: myData.id, timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
-
     input.value = "";
 }
 
-function handleInputKey(event) {
-    if (event.key === 'Enter') sendMessage();
-}
+function handleInputKey(e) { if(e.key === 'Enter') sendMessage(); }
+function closeChat() { document.getElementById('chat-room').classList.remove('active'); activeChatID = null; }
 
-function closeChat() {
-    document.getElementById('chat-room').classList.remove('active');
-    activeChatID = null;
-    if (unsubscribeChat) unsubscribeChat();
-}
-
-// التبديل بين التبويبات
 function showTab(name) {
-    document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(e => e.classList.remove('active'));
-    
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
     document.getElementById(`tab-${name}`).classList.add('active');
-    // تنشيط الزر المقابل (طريقة بسيطة)
-    const btns = document.querySelectorAll('.nav-btn');
-    if(name === 'friends') btns[0].classList.add('active');
-    if(name === 'requests') btns[1].classList.add('active');
-    if(name === 'add') btns[2].classList.add('active');
 }
