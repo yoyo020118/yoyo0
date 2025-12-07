@@ -3,104 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل دخول جوجل</title>
+    <title>تطبيق تواصل - دخول وإنشاء حساب</title>
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f4f4f4; margin: 0; }
-        .box { background: white; padding: 40px; border-radius: 10px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: 300px; }
-        .hidden { display: none; }
-        button { background: #4285F4; color: white; border: none; padding: 10px 20px; font-size: 16px; cursor: pointer; border-radius: 5px; width: 100%; }
-        button:hover { background: #357ae8; }
-        img { width: 80px; height: 80px; border-radius: 50%; margin-bottom: 15px; }
-        h3 { margin: 10px 0 5px; }
-        p { color: #666; font-size: 14px; }
-        .error { color: red; font-size: 12px; margin-top: 10px; border: 1px solid red; padding: 5px; display: none; background: #ffe6e6;}
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        
+        /* الحاويات */
+        .container { background: white; width: 350px; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+        .hidden { display: none !important; }
+        
+        /* المدخلات والأزرار */
+        input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; outline: none; }
+        .btn-main { width: 100%; padding: 12px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; font-size: 16px; margin-top: 10px; }
+        .btn-login { background-color: #1877f2; }
+        .btn-signup { background-color: #42b72a; }
+        .btn-google { background-color: #db4437; margin-top: 10px; }
+        
+        /* الروابط والنصوص */
+        .switch-link { color: #1877f2; cursor: pointer; text-decoration: underline; display: block; margin-top: 15px; font-size: 14px; }
+        .error-msg { color: red; font-size: 13px; margin-top: 10px; display: none; background: #ffebeb; padding: 5px; border-radius: 4px; border: 1px solid red; }
+        
+        /* الشاشة الرئيسية */
+        .app-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .profile-pic { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #42b72a; }
     </style>
 </head>
 <body>
 
-    <!-- واجهة تسجيل الدخول -->
-    <div id="login-view" class="box">
+    <!-- 1. نموذج تسجيل الدخول -->
+    <div id="login-form" class="container">
         <h2>تسجيل الدخول</h2>
-        <button onclick="signIn()">تسجيل الدخول بحساب جوجل</button>
-        <div id="error-msg" class="error"></div>
+        <input type="email" id="login-email" placeholder="البريد الإلكتروني">
+        <input type="password" id="login-pass" placeholder="كلمة المرور">
+        
+        <button class="btn-main btn-login" onclick="loginUser()">دخول</button>
+        <button class="btn-main btn-google" onclick="loginGoogle()">دخول عبر Google</button>
+        
+        <div id="login-error" class="error-msg"></div>
+        <p class="switch-link" onclick="showSignup()">ليس لديك حساب؟ إنشاء حساب جديد</p>
     </div>
 
-    <!-- واجهة المستخدم بعد الدخول -->
-    <div id="user-view" class="box hidden">
-        <img id="p-img" src="" alt="صورة">
-        <h3 id="p-name">الاسم</h3>
-        <p id="p-email">الايميل</p>
-        <button onclick="logOut()" style="background: #555; margin-top: 10px;">خروج</button>
+    <!-- 2. نموذج إنشاء حساب جديد -->
+    <div id="signup-form" class="container hidden">
+        <h2>إنشاء حساب جديد</h2>
+        <input type="text" id="signup-name" placeholder="الاسم الكامل">
+        <input type="email" id="signup-email" placeholder="البريد الإلكتروني">
+        <input type="password" id="signup-pass" placeholder="كلمة المرور (6 أحرف ع الأقل)">
+        
+        <button class="btn-main btn-signup" onclick="createUser()">إنشاء حساب</button>
+        
+        <div id="signup-error" class="error-msg"></div>
+        <p class="switch-link" onclick="showLogin()">لديك حساب بالفعل؟ تسجيل دخول</p>
+    </div>
+
+    <!-- 3. شاشة التطبيق (بعد الدخول) -->
+    <div id="app-screen" class="container hidden" style="width: 400px;">
+        <div class="app-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img id="user-img" src="https://via.placeholder.com/50" class="profile-pic">
+                <div>
+                    <h4 id="user-name" style="margin:0;">الاسم</h4>
+                    <span style="font-size: 12px; color: green;">● متصل</span>
+                </div>
+            </div>
+            <button onclick="logout()" style="background:#eee; border:none; padding:5px 10px; cursor:pointer; border-radius:5px;">خروج</button>
+        </div>
+        <hr>
+        <p>مرحباً بك في التطبيق! تم تسجيل الدخول بنجاح.</p>
     </div>
 
     <!-- مكتبات Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
-        // ======================================================
-        // 🔴🔴 هام جداً: انسخ الـ Config الخاص بك وضعه هنا 🔴🔴
-        // ======================================================
-        
+        // =======================================================
+        // ⚠️⚠️ ضع إعدادات مشروعك هنا لكي يعمل الزر ⚠️⚠️
+        // =======================================================
         const firebaseConfig = {
-            apiKey: "AIzaSy.......انسخ_الكود_الخاص_بك_من_فايربيس_وضعه_هنا.......",
-            authDomain: "xxxxxx.firebaseapp.com",
-            projectId: "xxxxxx",
-            storageBucket: "xxxxxx.appspot.com",
-            messagingSenderId: "xxxxxx",
-            appId: "xxxxxx"
+            apiKey: "AIzaSy.......PLACE_YOUR_API_KEY_HERE.......",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456",
+            appId: "1:123456:web:xxxxx"
         };
-        
-        // ======================================================
 
-        // تهيئة التطبيق
-        if (!firebase.apps.length) {
-            try {
-                firebase.initializeApp(firebaseConfig);
-            } catch (e) {
-                document.getElementById('error-msg').innerText = "خطأ في الإعدادات: تأكد من وضع الـ Config الصحيح!";
-                document.getElementById('error-msg').style.display = 'block';
-            }
-        }
+        // تهيئة Firebase
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
 
-        // زر الدخول
-        function signIn() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).catch((error) => {
-                const errorDiv = document.getElementById('error-msg');
-                errorDiv.style.display = 'block';
-                // ترجمة الأخطاء للعربية
-                if(error.code === 'auth/api-key-not-valid') {
-                    errorDiv.innerText = "خطأ: مفتاح API غير صحيح. انسخ البيانات من الموقع مرة أخرى.";
-                } else if (error.code === 'auth/unauthorized-domain') {
-                    errorDiv.innerText = "خطأ: هذا الرابط غير مصرح له (Domain Error). اذهب لإعدادات فايربيس وأضف الرابط.";
-                } else {
-                    errorDiv.innerText = error.message;
-                }
-            });
+        // --- دوال التبديل بين الشاشات ---
+        function showSignup() {
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('signup-form').classList.remove('hidden');
+            clearErrors();
         }
 
-        // زر الخروج
-        function logOut() {
+        function showLogin() {
+            document.getElementById('signup-form').classList.add('hidden');
+            document.getElementById('login-form').classList.remove('hidden');
+            clearErrors();
+        }
+
+        function clearErrors() {
+            document.getElementById('login-error').style.display = 'none';
+            document.getElementById('signup-error').style.display = 'none';
+        }
+
+        // --- 1. دالة إنشاء حساب جديد ---
+        function createUser() {
+            const name = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const pass = document.getElementById('signup-pass').value;
+            const errorDiv = document.getElementById('signup-error');
+
+            if(name === "" || email === "" || pass === "") {
+                errorDiv.innerText = "يرجى ملء جميع الحقول";
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            auth.createUserWithEmailAndPassword(email, pass)
+                .then((userCredential) => {
+                    // تم الإنشاء بنجاح، الآن نحفظ الاسم
+                    userCredential.user.updateProfile({
+                        displayName: name,
+                        photoURL: "https://ui-avatars.com/api/?name=" + name + "&background=random" // صورة تلقائية بالحروف
+                    }).then(() => {
+                        // تحديث الصفحة لظهور الاسم
+                        location.reload(); 
+                    });
+                })
+                .catch((error) => {
+                    let msg = error.message;
+                    if(error.code === 'auth/email-already-in-use') msg = "هذا البريد مسجل بالفعل، حاول تسجيل الدخول.";
+                    if(error.code === 'auth/weak-password') msg = "كلمة المرور ضعيفة (يجب أن تكون 6 أحرف على الأقل).";
+                    if(error.code === 'auth/invalid-email') msg = "البريد الإلكتروني غير صحيح.";
+                    errorDiv.innerText = msg;
+                    errorDiv.style.display = 'block';
+                });
+        }
+
+        // --- 2. دالة تسجيل الدخول ---
+        function loginUser() {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+            const errorDiv = document.getElementById('login-error');
+
+            auth.signInWithEmailAndPassword(email, pass)
+                .catch((error) => {
+                    let msg = "خطأ في البريد أو كلمة السر";
+                    if(error.code === 'auth/user-not-found') msg = "لا يوجد حساب لهذا البريد.";
+                    if(error.code === 'auth/wrong-password') msg = "كلمة المرور خطأ.";
+                    errorDiv.innerText = msg;
+                    errorDiv.style.display = 'block';
+                });
+        }
+
+        // --- 3. تسجيل دخول جوجل (اختياري) ---
+        function loginGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(e => alert(e.message));
+        }
+
+        // --- 4. تسجيل الخروج ---
+        function logout() {
             auth.signOut();
         }
 
-        // مراقب الحالة (يحفظ الدخول تلقائياً)
+        // --- مراقب الحالة (يحدد أي شاشة تظهر) ---
         auth.onAuthStateChanged((user) => {
             if (user) {
-                // المستخدم مسجل
-                document.getElementById('login-view').classList.add('hidden');
-                document.getElementById('user-view').classList.remove('hidden');
+                // المستخدم مسجل -> اظهر التطبيق واخفِ نماذج الدخول
+                document.getElementById('login-form').classList.add('hidden');
+                document.getElementById('signup-form').classList.add('hidden');
+                document.getElementById('app-screen').classList.remove('hidden');
                 
                 // عرض البيانات
-                document.getElementById('p-name').innerText = user.displayName;
-                document.getElementById('p-email').innerText = user.email;
-                document.getElementById('p-img').src = user.photoURL;
+                document.getElementById('user-name').innerText = user.displayName || user.email;
+                document.getElementById('user-img').src = user.photoURL || "https://ui-avatars.com/api/?name=" + (user.displayName || "User");
             } else {
-                // المستخدم غير مسجل
-                document.getElementById('login-view').classList.remove('hidden');
-                document.getElementById('user-view').classList.add('hidden');
+                // المستخدم غير مسجل -> اظهر نموذج الدخول
+                document.getElementById('app-screen').classList.add('hidden');
+                document.getElementById('login-form').classList.remove('hidden');
             }
         });
     </script>
