@@ -2,68 +2,167 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق تواصل مباشر</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Messenger Live</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f9; padding: 20px; text-align: center; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h2 { color: #333; }
-        input { padding: 10px; width: 70%; border: 1px solid #ddd; border-radius: 5px; }
-        button { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        button:hover { background: #218838; }
-        .user-card, .request-card { border: 1px solid #ddd; padding: 10px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; border-radius: 5px; }
-        .btn-add { background: #007bff; }
-        .btn-accept { background: #28a745; }
-        .section { margin-top: 30px; text-align: right; }
-        .hidden { display: none; }
-        #status { color: red; margin-top: 10px; }
+        :root {
+            --primary-color: #0084ff;
+            --bg-color: #f0f2f5;
+            --sidebar-width: 350px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Cairo', sans-serif; background-color: var(--bg-color); height: 100vh; overflow: hidden; }
+
+        /* تنبيه حي (Toast Notification) */
+        #liveToast {
+            visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center;
+            border-radius: 5px; padding: 16px; position: fixed; z-index: 2000; left: 50%; top: 30px;
+            transform: translateX(-50%); box-shadow: 0 4px 8px rgba(0,0,0,0.2); font-size: 14px;
+        }
+        #liveToast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @keyframes fadein { from {top: 0; opacity: 0;} to {top: 30px; opacity: 1;} }
+        @keyframes fadeout { from {top: 30px; opacity: 1;} to {top: 0; opacity: 0;} }
+
+        /* شاشة تسجيل الدخول */
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.98); z-index: 1000;
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
+        }
+        .login-box { text-align: center; padding: 40px; width: 90%; max-width: 400px; }
+        .login-box input { padding: 15px; width: 100%; border: 1px solid #ddd; border-radius: 50px; margin-bottom: 15px; text-align: center; outline: none; }
+        .login-box button { padding: 12px 30px; background: var(--primary-color); color: white; border: none; border-radius: 50px; width: 100%; cursor: pointer; }
+
+        /* التطبيق */
+        .app-container { display: flex; height: 100vh; width: 100%; }
+        
+        /* القائمة الجانبية */
+        .sidebar { width: var(--sidebar-width); background: white; border-left: 1px solid #ddd; display: flex; flex-direction: column; }
+        .sidebar-header { padding: 15px; background: #fff; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        
+        .tabs { display: flex; border-bottom: 1px solid #eee; }
+        .tab { flex: 1; padding: 15px; text-align: center; cursor: pointer; color: #65676b; border-bottom: 3px solid transparent; }
+        .tab.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+        .badge { background: red; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; display: none; position: absolute; top: 5px; right: 20px; }
+        .tab { position: relative; }
+
+        .list-container { flex: 1; overflow-y: auto; }
+        .user-item { padding: 15px; display: flex; align-items: center; border-bottom: 1px solid #f9f9f9; transition: 0.2s; }
+        .user-item:hover { background-color: #f0f2f5; }
+        
+        .avatar { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; margin-left: 10px; font-size: 18px; }
+        .avatar.blue { background: var(--primary-color); }
+        .avatar.green { background: #31a24c; }
+        .avatar.orange { background: #f7b928; }
+
+        .user-info { flex: 1; }
+        .user-name { font-weight: bold; font-size: 15px; color: #050505; }
+        .sub-text { color: #65676b; font-size: 13px; }
+
+        .btn-action { padding: 8px 15px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .btn-add { background: #e7f3ff; color: var(--primary-color); }
+        .btn-accept { background: #31a24c; color: white; }
+
+        /* منطقة الشات */
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: #fff; }
+        .empty-state { flex: 1; display: flex; justify-content: center; align-items: center; color: #aaa; flex-direction: column; }
+        
+        .chat-header { padding: 10px 20px; border-bottom: 1px solid #ddd; display: flex; align-items: center; height: 60px; background: #fff; }
+        .messages-container { flex: 1; padding: 20px; overflow-y: auto; background-color: #e5ddd5; }
+        .message-bubble { max-width: 75%; padding: 8px 14px; margin-bottom: 8px; border-radius: 15px; font-size: 14px; position: relative; width: fit-content; }
+        .msg-sent { background: var(--primary-color); color: white; margin-right: auto; border-bottom-left-radius: 2px; }
+        .msg-received { background: white; color: black; margin-left: auto; border-bottom-right-radius: 2px; }
+        
+        .input-area { padding: 10px; background: #f0f2f5; display: flex; gap: 10px; }
+        .input-area input { flex: 1; padding: 10px 20px; border-radius: 20px; border: none; outline: none; }
+        .send-btn { background: none; border: none; color: var(--primary-color); font-size: 20px; cursor: pointer; }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 100%; position: absolute; z-index: 10; height: 100%; }
+            .sidebar.hidden { display: none; }
+            .chat-area { width: 100%; height: 100%; }
+            .back-btn { margin-left: 10px; font-size: 20px; cursor: pointer; color: var(--primary-color); }
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- شاشة الدخول -->
-        <div id="loginScreen">
-            <h2>تسجيل الدخول</h2>
-            <input type="text" id="usernameInput" placeholder="اكتب اسمك هنا...">
+    <!-- تنبيه منبثق -->
+    <div id="liveToast">إشعار جديد</div>
+
+    <!-- تسجيل الدخول -->
+    <div id="loginOverlay">
+        <div class="login-box">
+            <i class="fab fa-facebook-messenger" style="font-size: 60px; color: var(--primary-color); margin-bottom: 20px;"></i>
+            <h3>مرحباً بك في الماسنجر</h3>
+            <input type="text" id="usernameInput" placeholder="اكتب اسمك الحقيقي..." autocomplete="off">
             <button onclick="login()">دخول</button>
         </div>
-
-        <!-- الشاشة الرئيسية -->
-        <div id="appScreen" class="hidden">
-            <h3 id="welcomeMsg"></h3>
-            
-            <!-- طلبات الصداقة الواردة -->
-            <div class="section">
-                <h4>🔔 طلبات الصداقة الواردة:</h4>
-                <div id="requestsList">لا يوجد طلبات حالياً</div>
-            </div>
-
-            <!-- قائمة الأصدقاء -->
-            <div class="section">
-                <h4>✅ أصدقاؤك:</h4>
-                <div id="friendsList">لا يوجد أصدقاء بعد</div>
-            </div>
-
-            <!-- كل المستخدمين -->
-            <div class="section">
-                <h4>👥 مستخدمون آخرون (أونلاين):</h4>
-                <div id="allUsersList">جاري التحميل...</div>
-            </div>
-        </div>
-        <p id="status"></p>
     </div>
 
-    <!-- ربط Firebase -->
+    <div class="app-container hidden" id="appContainer">
+        
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3 style="display:flex; align-items:center; gap:10px;">
+                    <span class="avatar blue" style="width:35px; height:35px;" id="myAvatarLetter"></span>
+                    <span id="myDisplayName"></span>
+                </h3>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('friends')">الأصدقاء</div>
+                <div class="tab" onclick="switchTab('explore')">بحث</div>
+                <div class="tab" onclick="switchTab('requests')">
+                    الطلبات <span id="reqBadge" class="badge">0</span>
+                </div>
+            </div>
+
+            <!-- القوائم -->
+            <div id="friendsList" class="list-container"></div>
+            <div id="exploreList" class="list-container hidden"></div>
+            <div id="requestsList" class="list-container hidden"></div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-area" id="chatArea">
+            <div id="emptyState" class="empty-state">
+                <i class="fab fa-facebook-messenger" style="font-size:50px; margin-bottom:20px;"></i>
+                <p>اختر صديقاً لبدء الدردشة</p>
+            </div>
+
+            <div id="chatInterface" class="hidden" style="display:none; flex-direction:column; height:100%;">
+                <div class="chat-header">
+                    <i class="fas fa-arrow-right back-btn" onclick="closeChatMobile()"></i>
+                    <div class="avatar green" style="width:40px; height:40px; margin-left:10px;" id="chatHeaderAvatar"></div>
+                    <div>
+                        <div class="user-name" id="chatHeaderName">User</div>
+                        <div style="font-size:11px; color:green;">متصل الآن</div>
+                    </div>
+                </div>
+
+                <div class="messages-container" id="messagesBox"></div>
+
+                <form class="input-area" onsubmit="sendMessage(event)">
+                    <input type="text" id="msgInput" placeholder="اكتب رسالة..." autocomplete="off">
+                    <button type="submit" class="send-btn"><i class="fas fa-paper-plane"></i></button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
     <script type="module">
-        // استيراد الدوال اللازمة من مكتبة فايربيس
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getDatabase, ref, set, onValue, push, update, remove, child, get } 
+        import { getDatabase, ref, set, onValue, push, update, remove, get } 
         from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
-        // -----------------------------------------------------------
-        // ⚠️⚠️ ضع إعدادات مشروعك هنا بدلاً من الأكواد أدناه ⚠️⚠️
-        // -----------------------------------------------------------
+        // ⚠️ استبدل هذا الجزء ببيانات مشروعك من Firebase ⚠️
         const firebaseConfig = {
             apiKey: "AIzaSyDxxxxxxxxx-xxxxxxxx",
             authDomain: "your-project.firebaseapp.com",
@@ -73,157 +172,217 @@
             messagingSenderId: "123456789",
             appId: "1:123456789:web:xxxxxx"
         };
-        // -----------------------------------------------------------
 
-        // تهيئة التطبيق
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let myId = localStorage.getItem('myUserId');
-        let myName = localStorage.getItem('myUserName');
+        let myId = localStorage.getItem('messenger_id');
+        let myName = localStorage.getItem('messenger_name');
+        let currentChatId = null;
+        let firstLoad = true; // لمنع الإشعارات عند فتح التطبيق لأول مرة
 
-        // دالة تسجيل الدخول
+        // دالة عرض التنبيه
+        function showToast(message) {
+            const toast = document.getElementById("liveToast");
+            toast.innerText = message;
+            toast.className = "show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
         window.login = function() {
-            const nameInput = document.getElementById('usernameInput').value;
-            if (!nameInput) return alert("الرجاء كتابة الاسم");
+            const input = document.getElementById('usernameInput');
+            if(!input.value.trim()) return alert("اكتب اسماً صحيحاً");
 
-            // إنشاء ID عشوائي للمستخدم إذا لم يكن موجوداً
-            if (!myId) {
+            if(!myId) {
                 myId = 'user_' + Date.now();
-                localStorage.setItem('myUserId', myId);
+                localStorage.setItem('messenger_id', myId);
             }
-            myName = nameInput;
-            localStorage.setItem('myUserName', myName);
+            myName = input.value;
+            localStorage.setItem('messenger_name', myName);
 
-            // حفظ المستخدم في قاعدة البيانات
-            set(ref(db, 'users/' + myId), {
-                username: myName,
-                id: myId,
-                status: 'online'
-            }).then(() => {
-                showApp();
-            });
+            // حفظ المستخدم
+            update(ref(db, 'users/' + myId), {
+                id: myId, name: myName, status: 'online'
+            }).then(() => initApp());
         }
 
-        // عرض التطبيق وإخفاء تسجيل الدخول
-        function showApp() {
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('appScreen').classList.remove('hidden');
-            document.getElementById('welcomeMsg').innerText = `مرحباً بك، ${myName}`;
-            
-            loadUsers();
-            loadRequests();
-            loadFriends();
+        function initApp() {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('appContainer').classList.remove('hidden');
+            document.getElementById('myDisplayName').innerText = myName;
+            document.getElementById('myAvatarLetter').innerText = myName.charAt(0).toUpperCase();
+
+            listenData();
         }
 
-        // 1. تحميل قائمة المستخدمين (LIVE)
-        function loadUsers() {
-            const usersRef = ref(db, 'users');
-            onValue(usersRef, (snapshot) => {
-                const usersListDiv = document.getElementById('allUsersList');
-                usersListDiv.innerHTML = "";
-                const data = snapshot.val();
-
-                if (data) {
-                    Object.values(data).forEach(user => {
-                        // لا تعرض نفسك في القائمة
-                        if (user.id !== myId) {
-                            // تحقق ما إذا كان صديقاً بالفعل
-                            get(ref(db, `friends/${myId}/${user.id}`)).then((friendSnap) => {
-                                if(!friendSnap.exists()) {
-                                    const div = document.createElement('div');
-                                    div.className = 'user-card';
-                                    div.innerHTML = `
-                                        <span>👤 ${user.username}</span>
-                                        <button class="btn-add" onclick="sendRequest('${user.id}', '${user.username}')">إضافة صديق</button>
-                                    `;
-                                    usersListDiv.appendChild(div);
-                                }
-                            });
+        function listenData() {
+            // 1. الاستماع للمستخدمين (للبحث)
+            onValue(ref(db, 'users'), (snap) => {
+                const list = document.getElementById('exploreList');
+                list.innerHTML = '';
+                const users = snap.val() || {};
+                
+                get(ref(db, `friends/${myId}`)).then((fSnap) => {
+                    const myFriends = fSnap.val() || {};
+                    Object.values(users).forEach(u => {
+                        if(u.id !== myId && !myFriends[u.id]) {
+                            const div = document.createElement('div');
+                            div.className = 'user-item';
+                            div.innerHTML = `
+                                <div class="avatar blue">${u.name.charAt(0)}</div>
+                                <div class="user-info">
+                                    <div class="user-name">${u.name}</div>
+                                    <div class="sub-text">مستخدم جديد</div>
+                                </div>
+                                <button class="btn-action btn-add" onclick="sendRequest('${u.id}', '${u.name}')">إضافة +</button>
+                            `;
+                            list.appendChild(div);
                         }
                     });
-                } else {
-                    usersListDiv.innerHTML = "لا يوجد مستخدمين آخرين.";
-                }
+                });
             });
-        }
 
-        // 2. إرسال طلب صداقة
-        window.sendRequest = function(targetId, targetName) {
-            // إضافة الطلب في قائمة الطلبات لدى الشخص الآخر
-            // المسار: requests -> TargetID -> MyID
-            set(ref(db, `requests/${targetId}/${myId}`), {
-                fromName: myName,
-                fromId: myId
-            }).then(() => {
-                alert(`تم إرسال طلب إلى ${targetName}`);
-            }).catch(err => console.error(err));
-        }
-
-        // 3. استقبال الطلبات (LIVE)
-        function loadRequests() {
-            const requestsRef = ref(db, `requests/${myId}`);
-            onValue(requestsRef, (snapshot) => {
+            // 2. الاستماع للطلبات (LIVE Notification Here)
+            onValue(ref(db, `requests/${myId}`), (snap) => {
                 const list = document.getElementById('requestsList');
-                list.innerHTML = "";
-                const data = snapshot.val();
-
-                if (data) {
-                    Object.values(data).forEach(req => {
-                        const div = document.createElement('div');
-                        div.className = 'request-card';
-                        div.style.borderColor = "#ffc107";
-                        div.innerHTML = `
-                            <span>📩 طلب من: <b>${req.fromName}</b></span>
-                            <button class="btn-accept" onclick="acceptRequest('${req.fromId}', '${req.fromName}')">موافقة</button>
-                        `;
-                        list.appendChild(div);
-                    });
+                list.innerHTML = '';
+                const reqs = snap.val() || {};
+                const keys = Object.keys(reqs);
+                
+                // تحديث العداد
+                const badge = document.getElementById('reqBadge');
+                if(keys.length > 0) {
+                    badge.style.display = 'inline-block';
+                    badge.innerText = keys.length;
                 } else {
-                    list.innerHTML = "لا توجد طلبات جديدة.";
+                    badge.style.display = 'none';
+                    list.innerHTML = '<div style="padding:20px; text-align:center;">لا توجد طلبات</div>';
                 }
+
+                // عرض الطلبات
+                Object.values(reqs).forEach(req => {
+                    // هنا يظهر الاسم بشكل واضح
+                    const div = document.createElement('div');
+                    div.className = 'user-item';
+                    div.innerHTML = `
+                        <div class="avatar orange">${req.fromName.charAt(0)}</div>
+                        <div class="user-info">
+                            <div class="user-name">طلب من: ${req.fromName}</div>
+                            <div class="sub-text">يريد إضافتك كصديق</div>
+                        </div>
+                        <button class="btn-action btn-accept" onclick="acceptRequest('${req.fromId}', '${req.fromName}')">قبول</button>
+                    `;
+                    list.appendChild(div);
+
+                    // إشعار فوري إذا كان طلب جديد (ليس عند تحميل الصفحة لأول مرة)
+                    if(!firstLoad && (Date.now() - req.timestamp < 5000)) { 
+                        showToast(`🔔 ${req.fromName} أرسل لك طلب صداقة!`);
+                    }
+                });
+                
+                if(keys.length > 0) firstLoad = false; // بعد أول تحميل، نسمح بالإشعارات
             });
-        }
 
-        // 4. قبول الطلب
-        window.acceptRequest = function(friendId, friendName) {
-            // 1. إضافة الشخص لقائمتي
-            const updates = {};
-            updates[`friends/${myId}/${friendId}`] = { name: friendName };
-            // 2. إضافتي لقائمة الشخص الآخر
-            updates[`friends/${friendId}/${myId}`] = { name: myName };
-            // 3. حذف الطلب
-            updates[`requests/${myId}/${friendId}`] = null;
-
-            update(ref(db), updates).then(() => {
-                alert("تمت الموافقة! أصبحتما أصدقاء.");
-            });
-        }
-
-        // 5. تحميل قائمة الأصدقاء (LIVE)
-        function loadFriends() {
-            const friendsRef = ref(db, `friends/${myId}`);
-            onValue(friendsRef, (snapshot) => {
+            // 3. الاستماع للأصدقاء
+            onValue(ref(db, `friends/${myId}`), (snap) => {
                 const list = document.getElementById('friendsList');
-                list.innerHTML = "";
-                const data = snapshot.val();
-
-                if (data) {
-                    Object.values(data).forEach(friend => {
-                        const div = document.createElement('div');
-                        div.className = 'user-card';
-                        div.style.backgroundColor = "#e8f5e9";
-                        div.innerHTML = `<span>✅ ${friend.name}</span>`;
-                        list.appendChild(div);
-                    });
+                list.innerHTML = '';
+                const friends = snap.val() || {};
+                
+                if(Object.keys(friends).length === 0) {
+                    list.innerHTML = '<div style="padding:20px; text-align:center;">ليس لديك أصدقاء بعد</div>';
                 }
+
+                Object.values(friends).forEach(f => {
+                    const div = document.createElement('div');
+                    div.className = 'user-item';
+                    div.onclick = () => openChat(f.id, f.name);
+                    div.innerHTML = `
+                        <div class="avatar green">${f.name.charAt(0)}</div>
+                        <div class="user-info">
+                            <div class="user-name">${f.name}</div>
+                            <div class="sub-text">اضغط للمحادثة</div>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
             });
         }
 
-        // التحقق من وجود جلسة سابقة
-        if(myId && myName) {
-            showApp();
+        // إرسال طلب
+        window.sendRequest = function(targetId, targetName) {
+            set(ref(db, `requests/${targetId}/${myId}`), {
+                fromId: myId,
+                fromName: myName, // إرسال الاسم ليظهر للطرف الآخر
+                timestamp: Date.now()
+            }).then(() => {
+                alert(`تم إرسال الطلب إلى ${targetName}`);
+            });
         }
+
+        // قبول طلب
+        window.acceptRequest = function(friendId, friendName) {
+            const updates = {};
+            updates[`friends/${myId}/${friendId}`] = { id: friendId, name: friendName };
+            updates[`friends/${friendId}/${myId}`] = { id: myId, name: myName };
+            updates[`requests/${myId}/${friendId}`] = null;
+            update(ref(db), updates).then(() => {
+                showToast(`تمت إضافة ${friendName} لقائمة أصدقائك`);
+                switchTab('friends');
+            });
+        }
+
+        // فتح الشات
+        window.openChat = function(fId, fName) {
+            currentChatId = [myId, fId].sort().join('_');
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('chatInterface').style.display = 'flex';
+            document.getElementById('chatInterface').classList.remove('hidden');
+            
+            document.getElementById('chatHeaderName').innerText = fName;
+            document.getElementById('chatHeaderAvatar').innerText = fName.charAt(0);
+            
+            if(window.innerWidth <= 768) document.getElementById('sidebar').classList.add('hidden');
+
+            const msgsRef = ref(db, `messages/${currentChatId}`);
+            onValue(msgsRef, (snap) => {
+                const box = document.getElementById('messagesBox');
+                box.innerHTML = '';
+                const msgs = snap.val() || {};
+                Object.values(msgs).forEach(m => {
+                    const div = document.createElement('div');
+                    div.className = `message-bubble ${m.sender === myId ? 'msg-sent' : 'msg-received'}`;
+                    div.innerText = m.text;
+                    box.appendChild(div);
+                });
+                box.scrollTop = box.scrollHeight;
+            });
+        }
+
+        window.sendMessage = function(e) {
+            e.preventDefault();
+            const inp = document.getElementById('msgInput');
+            if(!inp.value.trim() || !currentChatId) return;
+            push(ref(db, `messages/${currentChatId}`), {
+                sender: myId, text: inp.value, time: Date.now()
+            });
+            inp.value = '';
+        }
+
+        window.switchTab = function(tName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            document.querySelectorAll('.list-container').forEach(l => l.classList.add('hidden'));
+            document.getElementById(tName + 'List').classList.remove('hidden');
+        }
+
+        window.closeChatMobile = function() {
+            document.getElementById('sidebar').classList.remove('hidden');
+            document.getElementById('chatInterface').classList.add('hidden');
+            document.getElementById('emptyState').style.display = 'flex';
+        }
+
+        if(myId) initApp();
     </script>
 </body>
 </html>
