@@ -1,48 +1,44 @@
-<!-- public/index.html -->
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>واتساب ويب</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>تسجيل Google حقيقي</title>
 </head>
 <body>
-    <!-- شاشة تسجيل الدخول البسيطة -->
-    <div id="login-screen">
-        <div class="login-box">
-            <h2>مرحباً في واتساب</h2>
-            <input type="text" id="username-input" placeholder="ادخل اسمك هنا...">
-            <button onclick="joinChat()">دخول للدردشة</button>
-        </div>
-    </div>
 
-    <!-- واجهة التطبيق الرئيسية -->
-    <div class="app-container" id="app-interface" style="display: none;">
-        <!-- الشريط العلوي -->
-        <header>
-            <div class="user-info">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png" alt="User">
-                <div class="details">
-                    <span id="chat-title">مجموعة عامة</span>
-                    <span id="typing-indicator"></span>
-                </div>
-            </div>
-        </header>
+  <h2>تسجيل الدخول باستخدام Google</h2>
+  <button id="btnGoogle">تسجيل دخول بـ Google</button>
 
-        <!-- منطقة الرسائل -->
-        <div class="chat-container">
-            <!-- الرسائل تظهر هنا -->
-        </div>
+  <script type="module">
+    // استيراد Firebase من CDN
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
 
-        <!-- منطقة الكتابة -->
-        <div class="input-area">
-            <input type="text" id="messageInp" placeholder="اكتب رسالة..." autocomplete="off">
-            <button class="send-btn" onclick="sendMessage()">➤</button>
-        </div>
-    </div>
+    // ضع هنا الـ Firebase Config الخاص بك
+    const firebaseConfig = {
+      apiKey: "AIzaSyC08ihJ4f3arua6_pWyzimT3ndAWPVKjbc",
+      authDomain: "yoyo-3b06a.firebaseapp.com",
+      projectId: "yoyo-3b06a",
+      storageBucket: "yoyo-3b06a.firebasestorage.app",
+      messagingSenderId: "942048587610",
+      appId: "1:942048587610:web:6118a870029bcb3e198d63",
+      measurementId: "G-6MPXNLDKWF"
+    };
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="client.js"></script>
+    // تهيئة Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    // زر تسجيل الدخول
+    document.getElementById('btnGoogle').onclick = () => {
+      signInWithPopup(auth, provider)
+        .then(result => {
+          alert('مرحباً ' + result.user.displayName);
+        })
+        .catch(err => console.log(err));
+    };
+  </script>
+
 </body>
 </html>
