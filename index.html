@@ -1,275 +1,707 @@
-<!doctype html>
-<html lang="ar">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>متصفح مصغّر - مميزاتي</title>
-<style>
-  :root{--bg:#0b1220;--panel:#0f1724;--muted:#94a3b8;--accent:#06b6d4}
-  *{box-sizing:border-box;font-family:Inter, system-ui, Arial}
-  body{margin:0;background:linear-gradient(180deg,#071124,#08131a);color:#e6eef5}
-  .app{max-width:1200px;margin:12px auto;padding:12px;display:grid;grid-template-columns:360px 1fr;gap:12px}
-  header{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--panel);border-radius:10px}
-  header h1{margin:0;font-size:16px}
-  .sidebar{background:var(--panel);padding:12px;border-radius:10px;height:80vh;overflow:auto}
-  .main{background:var(--panel);padding:10px;border-radius:10px;height:80vh;display:flex;flex-direction:column}
-  .address{display:flex;gap:8px;margin-bottom:8px}
-  .address input{flex:1;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit}
-  .address button{padding:8px 10px;border-radius:6px;border:none;background:var(--accent);color:#022}
-  .iframe-wrap{flex:1;background:#02111a;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.03)}
-  iframe{width:100%;height:100%;border:0}
-  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-  .tab{padding:6px 10px;background:rgba(255,255,255,0.02);border-radius:6px;cursor:pointer}
-  .tab.active{background:linear-gradient(90deg,var(--accent),#7c3aed);color:#022}
-  .section-title{font-size:14px;margin:8px 0;color:var(--muted)}
-  .extensions-list{display:flex;flex-direction:column;gap:8px}
-  .ext-card{display:flex;gap:8px;align-items:center;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02)}
-  .ext-card img{width:40px;height:40px;border-radius:8px;object-fit:cover}
-  .ext-actions{margin-left:auto;display:flex;gap:6px}
-  .btn{padding:6px 8px;border-radius:6px;border:none;cursor:pointer;background:rgba(255,255,255,0.03)}
-  .btn.primary{background:var(--accent);color:#022}
-  .form-row{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
-  input[type="text"], textarea{padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
-  .small{font-size:13px;color:var(--muted)}
-  footer{grid-column:1/-1;margin-top:8px;text-align:center;color:var(--muted);font-size:13px}
-  @media(max-width:900px){.app{grid-template-columns:1fr;}.sidebar{height:auto}.main{height:auto}}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOYO Games Network</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- الألوان والتصميم العام --- */
+        :root {
+            --bg-main: #1e1e2e;
+            --primary: #f9ca24;
+            --secondary: #6c5ce7;
+            --accent: #eb4d4b;
+            --text: #ffffff;
+            --card: #2d3436;
+            --admin-green: #00ff00;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            overflow-x: hidden;
+            padding-bottom: 80px; /* مساحة للزر العائم */
+        }
+
+        button { font-family: 'Tajawal', sans-serif; cursor: pointer; transition: 0.3s; }
+        button:active { transform: scale(0.95); }
+
+        /* --- الشريط العلوي --- */
+        .header {
+            background: rgba(0,0,0,0.9);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--secondary);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .user-badge {
+            background: #333;
+            padding: 5px 15px;
+            border-radius: 20px;
+            border: 1px solid var(--primary);
+            font-size: 14px;
+        }
+
+        #my-id { color: var(--primary); font-weight: bold; cursor: copy; }
+
+        .menu-icon {
+            font-size: 24px;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* --- القائمة الجانبية --- */
+        .sidebar {
+            position: fixed;
+            top: 0; right: -260px;
+            width: 260px;
+            height: 100%;
+            background: var(--card);
+            box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+            transition: 0.4s;
+            z-index: 200;
+            padding-top: 60px;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar.active { right: 0; }
+        
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 15px 20px;
+            text-align: right;
+            border-bottom: 1px solid #444;
+            font-size: 18px;
+        }
+        .nav-btn:hover { background: var(--secondary); padding-right: 30px; }
+
+        /* --- الصفحات --- */
+        .page {
+            display: none;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            animation: slideUp 0.5s ease;
+        }
+        .page.show { display: block; }
+        @keyframes slideUp { from {opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
+
+        /* --- تصميم الألعاب --- */
+        .games-wrapper {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .game-card {
+            background: var(--card);
+            border-radius: 15px;
+            padding: 20px;
+            position: relative;
+            border: 2px solid transparent;
+        }
+        .game-card:hover { border-color: var(--secondary); }
+        
+        .info-btn {
+            position: absolute;
+            top: 10px; left: 10px;
+            width: 30px; height: 30px;
+            background: var(--primary);
+            color: black;
+            border-radius: 50%;
+            font-weight: bold;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 0 10px var(--primary);
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .play-btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        /* --- الحساب --- */
+        .account-details {
+            display: none;
+            background: #000;
+            border: 2px dashed var(--accent);
+            padding: 20px;
+            position: relative;
+        }
+        .anti-screenshot {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0px, transparent 10px);
+            display: flex; justify-content: center; align-items: center;
+            font-size: 30px; color: rgba(255,0,0,0.2);
+            transform: rotate(-20deg);
+            pointer-events: none;
+        }
+
+        /* --- الإعلانات --- */
+        .ad-item {
+            background: var(--card);
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-right: 5px solid var(--primary);
+        }
+        .watch-btn {
+            background: var(--primary);
+            color: black;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .watch-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* --- زر الدعم الفني الظاهر --- */
+        #support-float-btn {
+            position: fixed;
+            bottom: 20px; 
+            right: 20px;
+            background: linear-gradient(45deg, var(--secondary), #a29bfe);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 30px;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 5px 20px rgba(108, 92, 231, 0.5);
+            z-index: 150;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        #support-float-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* --- النوافذ المنبثقة --- */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 300;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-box {
+            background: var(--card);
+            width: 90%; max-width: 500px;
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--secondary);
+            text-align: center;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        /* --- الشات --- */
+        .chat-container {
+            height: 300px;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 10px;
+            padding: 10px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .msg { padding: 8px 12px; border-radius: 10px; max-width: 80%; width: fit-content; }
+        .msg.user { background: var(--secondary); color: white; align-self: flex-end; border-bottom-left-radius: 0; }
+        .msg.admin { background: #444; color: white; align-self: flex-start; border-bottom-right-radius: 0; }
+        
+        .chat-input-area { display: flex; gap: 10px; }
+        .chat-input-area input { flex: 1; padding: 10px; border-radius: 5px; border: none; }
+
+        /* --- لوحة الأدمن --- */
+        #admin-panel {
+            background: #000;
+            border: 2px solid var(--admin-green);
+            background-image: linear-gradient(rgba(0, 255, 0, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 255, 0, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        #admin-panel * { font-family: 'Courier New', monospace; }
+        .admin-input { background: #111; border: 1px solid var(--admin-green); color: var(--admin-green); padding: 5px; width: 100%; }
+        
+        .inbox-list {
+            text-align: right;
+            border: 1px solid var(--admin-green);
+            max-height: 150px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+        .inbox-item {
+            padding: 5px;
+            border-bottom: 1px solid #333;
+            cursor: pointer;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+        }
+        .inbox-item:hover { background: #111; color: var(--admin-green); }
+
+        /* زر الأدمن المخفي (يسار أسفل) */
+        #hidden-admin-btn {
+            position: fixed;
+            bottom: 5px; left: 5px;
+            width: 30px; height: 30px;
+            background: transparent;
+            border: none;
+            z-index: 200;
+        }
+
+    </style>
 </head>
 <body>
-  <div class="app" dir="rtl">
-    <header>
-      <h1>المتصفح المصغّر — مميزاتك</h1>
-      <div class="small">احفظ الإضافات في المتصفح وشارك لي JSON الإضافة لأدراجها</div>
-    </header>
 
-    <aside class="sidebar">
-      <div class="section-title">التبويبات</div>
-      <div class="tabs" id="tabs"></div>
-      <div style="margin-top:12px">
-        <button class="btn primary" id="newTabBtn">+ تبويب جديد</button>
-        <button class="btn" id="closeTabBtn">إغلاق التبويب النشط</button>
-      </div>
-
-      <hr style="margin:12px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)"/>
-
-      <div class="section-title">الإضافات / المميزات</div>
-      <div id="extensions" class="extensions-list"></div>
-
-      <div style="margin-top:12px" class="section-title">إضافة إضافة جديدة</div>
-      <div id="addExtForm">
-        <div class="form-row"><input id="extName" type="text" placeholder="اسم الإضافة (مثلاً: مترجم)"></div>
-        <div class="form-row"><input id="extIcon" type="text" placeholder="رابط أيقونة (اختياري)"></div>
-        <div class="form-row"><input id="extLink" type="text" placeholder="رابط قابل للفتح (مثلاً صفحة أداة)"></div>
-        <div class="form-row"><textarea id="extDesc" rows="2" placeholder="وصف قصير"></textarea></div>
-        <div style="display:flex;gap:8px">
-          <button class="btn primary" id="addExtBtn">أضف الإضافة</button>
-          <button class="btn" id="exportExtBtn" title="نسخ JSON">نسخ JSON</button>
+    <!-- الشريط العلوي -->
+    <div class="header">
+        <button class="menu-icon" onclick="toggleSidebar()">☰</button>
+        <div class="user-badge">
+            ID: <span id="my-id" onclick="copyId()">--</span> | 💰 <span id="my-coins">0</span>
         </div>
-        <div class="small" style="margin-top:8px">ممكن ترسل لي JSON الإضافة التي تنتجها لأضيفها لك على النسخة الرئيسية.</div>
-      </div>
+    </div>
 
-    </aside>
+    <!-- القائمة الجانبية -->
+    <div id="sidebar" class="sidebar">
+        <button class="nav-btn" onclick="navTo('home')">🏠 الرئيسية</button>
+        <button class="nav-btn" onclick="navTo('games')">🎮 صالة الألعاب</button>
+        <button class="nav-btn" onclick="navTo('account')">👤 شراء الحساب</button>
+        <button class="nav-btn" onclick="navTo('ads')">📺 كسب العملات</button>
+        <!-- زر تواصل داخل القائمة أيضاً -->
+        <button class="nav-btn" onclick="openUserChat()" style="color: var(--primary);">📞 تواصل معنا</button>
+        <button class="nav-btn" onclick="toggleSidebar()" style="color:var(--accent); margin-top:auto;">إغلاق القائمة</button>
+    </div>
 
-    <main class="main">
-      <div class="address">
-        <input id="urlInput" placeholder="أدخل رابط ثم اضغط افتح (مثال: https://example.com)" />
-        <button id="openBtn">افتح</button>
-      </div>
+    <!-- 1. الرئيسية -->
+    <div id="home" class="page show">
+        <div style="text-align:center; padding-top:50px;">
+            <h1 style="font-size:3em; color:var(--primary)">YOYO WORLD</h1>
+            <p>أهلاً بك في عالم الجوائز والتحديات</p>
+            <br>
+            <button class="play-btn" style="width:200px;" onclick="navTo('games')">ابدأ اللعب الآن</button>
+        </div>
+    </div>
 
-      <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-        <div class="small">Bookmarks:</div>
-        <select id="bookmarks" style="flex:1;padding:6px;border-radius:6px;background:transparent;color:inherit;border:1px solid rgba(255,255,255,0.04)"></select>
-        <button class="btn" id="addBookmarkBtn">حفظ</button>
-      </div>
+    <!-- 2. صفحة الألعاب -->
+    <div id="games" class="page">
+        <h2>🎮 الألعاب (كل فوز يزيد الصعوبة)</h2>
+        <div class="games-wrapper">
+            <!-- لعبة 1 -->
+            <div class="game-card">
+                <div class="info-btn" onclick="showInfo(0)">!</div>
+                <h3>🔢 الحساب الذهني</h3>
+                <p>مستوى: <span id="lvl-0">1</span></p>
+                <button class="play-btn" onclick="startGame(0)">لعب</button>
+            </div>
+            <!-- لعبة 2 -->
+            <div class="game-card">
+                <div class="info-btn" onclick="showInfo(1)">!</div>
+                <h3>⚡ سرعة البرق</h3>
+                <p>مستوى: <span id="lvl-1">1</span></p>
+                <button class="play-btn" onclick="startGame(1)">لعب</button>
+            </div>
+            <!-- لعبة 3 -->
+            <div class="game-card">
+                <div class="info-btn" onclick="showInfo(2)">!</div>
+                <h3>🧠 الذاكرة</h3>
+                <p>مستوى: <span id="lvl-2">1</span></p>
+                <button class="play-btn" onclick="startGame(2)">لعب</button>
+            </div>
+            <!-- لعبة 4 -->
+            <div class="game-card">
+                <div class="info-btn" onclick="showInfo(3)">!</div>
+                <h3>🎲 فك الكود</h3>
+                <p>مستوى: <span id="lvl-3">1</span></p>
+                <button class="play-btn" onclick="startGame(3)">لعب</button>
+            </div>
+            <!-- لعبة 5 -->
+            <div class="game-card">
+                <div class="info-btn" onclick="showInfo(4)">!</div>
+                <h3>🔨 المطرقة</h3>
+                <p>مستوى: <span id="lvl-4">1</span></p>
+                <button class="play-btn" onclick="startGame(4)">لعب</button>
+            </div>
+        </div>
+    </div>
 
-      <div class="iframe-wrap">
-        <iframe id="webview" sandbox="allow-forms allow-same-origin allow-scripts allow-popups"></iframe>
-      </div>
-    </main>
+    <!-- 3. صفحة الحساب -->
+    <div id="account" class="page">
+        <h2>👤 المتجر السري</h2>
+        <div id="acc-locked" style="text-align:center; padding:30px; background:var(--card); border-radius:10px;">
+            <h3>حساب الـ VIP</h3>
+            <p>السعر: <strong>10,000</strong> عملة</p>
+            <button class="play-btn" style="background:var(--primary); color:black;" onclick="buyAccount()">شراء الحساب</button>
+        </div>
+        <div id="acc-unlocked" class="account-details">
+            <div class="anti-screenshot">CONFIDENTIAL</div>
+            <h3 style="color:var(--secondary)">بيانات الحساب (سري للغاية)</h3>
+            <p>البريد: <strong style="background:#333; color:white; padding:5px;">yoyo@gmail.com</strong></p>
+            <p>كلمة المرور: <strong style="background:#333; color:white; padding:5px;">0595053427Aa</strong></p>
+            <p style="color:red; font-size:12px;">تحذير: لا تحاول التصوير. النظام يحفظ البيانات تلقائياً.</p>
+        </div>
+    </div>
 
-  </div>
+    <!-- 4. صفحة الإعلانات -->
+    <div id="ads" class="page">
+        <h2>📺 شاهد واربح</h2>
+        <div id="ad-timer" style="display:none; text-align:center; background:var(--primary); padding:10px; color:black; margin-bottom:10px;">
+            جاري المشاهدة... <span id="timer-val">0</span> ثانية
+        </div>
+        <div class="ad-item"><span>فيديو قصير (30 ث)</span><button class="watch-btn" onclick="watchAd(30, 25)">+25 💰</button></div>
+        <div class="ad-item"><span>فيديو عادي (35 ث)</span><button class="watch-btn" onclick="watchAd(35, 35)">+35 💰</button></div>
+        <div class="ad-item"><span>فيديو طويل (40 ث)</span><button class="watch-btn" onclick="watchAd(40, 50)">+50 💰</button></div>
+        <div class="ad-item"><span>إعلان ذهبي (50 ث)</span><button class="watch-btn" onclick="watchAd(50, 70)">+70 💰</button></div>
+        <div class="ad-item"><span>ميجا باقة (80 ث)</span><button class="watch-btn" onclick="watchAd(80, 120)">+120 💰</button></div>
+    </div>
 
-  <footer>نسخة تجريبية — احفظ إضافاتك في JSON و أرسلها لي لأدرجها في الصفحة الرئيسية.</footer>
+    <!-- زر الدعم الفني الظاهر -->
+    <button id="support-float-btn" onclick="openUserChat()">
+        💬 الدعم الفني
+    </button>
 
-<script>
-/* ===== بيانات افتراضية و localStorage ====== */
-const STORE_KEY = 'mini_browser_v1';
-let state = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
-if(!state.tabs) state.tabs = [{id: genId(), url: 'https://example.com', title: 'مثال'}];
-if(!state.activeTab) state.activeTab = state.tabs[0].id;
-if(!state.extensions) state.extensions = [
-  {id: genId(), name:'محول نص', icon:'https://via.placeholder.com/64/0a84ff/fff?text=T', link:'https://translate.google.com', desc:'محول نص سريع (يفتح صفحة خارجية)'},
-  {id: genId(), name:'مترجم', icon:'https://via.placeholder.com/64/22c55e/fff?text=A', link:'https://www.bing.com/translator', desc:'مترجم بديل'}
-];
-if(!state.bookmarks) state.bookmarks = [];
+    <!-- نافذة الشات (المستخدم) -->
+    <div id="user-chat-modal" class="modal">
+        <div class="modal-box">
+            <h3>💬 تواصل مع الدعم الفني</h3>
+            <div id="user-chat-box" class="chat-container"></div>
+            <div class="chat-input-area">
+                <input type="text" id="user-msg-in" placeholder="اكتب رسالتك...">
+                <button class="watch-btn" onclick="sendUserMsg()">إرسال</button>
+            </div>
+            <br>
+            <button class="nav-btn" style="color:red; width:100%; text-align:center;" onclick="closeModals()">إغلاق</button>
+        </div>
+    </div>
 
-saveState();
+    <!-- نافذة معلومات اللعبة -->
+    <div id="info-modal" class="modal">
+        <div class="modal-box">
+            <h3 id="info-title"></h3>
+            <p id="info-desc"></p>
+            <p>الجائزة: <span id="info-reward" style="color:var(--primary)"></span></p>
+            <button class="watch-btn" onclick="closeModals()">حسناً</button>
+        </div>
+    </div>
 
-const tabsEl = document.getElementById('tabs');
-const webview = document.getElementById('webview');
-const urlInput = document.getElementById('urlInput');
-const openBtn = document.getElementById('openBtn');
-const newTabBtn = document.getElementById('newTabBtn');
-const closeTabBtn = document.getElementById('closeTabBtn');
-const extensionsEl = document.getElementById('extensions');
-const addExtBtn = document.getElementById('addExtBtn');
-const exportExtBtn = document.getElementById('exportExtBtn');
-const extName = document.getElementById('extName');
-const extIcon = document.getElementById('extIcon');
-const extLink = document.getElementById('extLink');
-const extDesc = document.getElementById('extDesc');
-const bookmarksSel = document.getElementById('bookmarks');
-const addBookmarkBtn = document.getElementById('addBookmarkBtn');
+    <!-- نافذة اللعب -->
+    <div id="game-modal" class="modal">
+        <div class="modal-box" style="border-color:white;">
+            <div id="game-area"></div>
+            <br>
+            <button class="nav-btn" style="color:red; width:100%; text-align:center;" onclick="closeModals()">استسلام</button>
+        </div>
+    </div>
 
-/* ===== دوال مساعدة ===== */
-function genId(){ return 'i'+Math.random().toString(36).slice(2,9); }
-function saveState(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); renderAll(); }
-function normalizeUrl(u){
-  if(!u) return '';
-  if(/^(http|https):\/\//.test(u)) return u;
-  return 'https://' + u;
-}
+    <!-- زر الأدمن المخفي -->
+    <button id="hidden-admin-btn" onclick="openAdminLogin()"></button>
 
-/* ===== التابز ===== */
-function renderTabs(){
-  tabsEl.innerHTML = '';
-  state.tabs.forEach(t=>{
-    const d = document.createElement('div');
-    d.className = 'tab' + (t.id===state.activeTab? ' active':'');
-    d.textContent = t.title || t.url;
-    d.dataset.id = t.id;
-    d.onclick = ()=>{ state.activeTab = t.id; saveState(); }
-    tabsEl.appendChild(d);
-  });
-}
+    <!-- تسجيل دخول الأدمن -->
+    <div id="admin-login" class="modal">
+        <div class="modal-box" style="background:black; border-color:var(--admin-green);">
+            <h3 style="color:var(--admin-green)">ACCESS SYSTEM</h3>
+            <input type="password" id="adm-pass" class="admin-input" placeholder="Password">
+            <br><br>
+            <button class="watch-btn" style="background:var(--admin-green);" onclick="checkAdmin()">LOGIN</button>
+        </div>
+    </div>
 
-/* ===== الإضافات ===== */
-function renderExtensions(){
-  extensionsEl.innerHTML = '';
-  state.extensions.forEach(e=>{
-    const card = document.createElement('div'); card.className='ext-card';
-    card.innerHTML = `<img src="${e.icon||'https://via.placeholder.com/64/999/fff?text=+'}" alt="">
-      <div>
-        <div style="font-weight:700">${e.name}</div>
-        <div class="small">${e.desc||''}</div>
-      </div>
-      <div class="ext-actions">
-        <button class="btn" onclick="openExt('${e.link}')">فتح</button>
-        <button class="btn" onclick="copyExtJson('${e.id}')">نسخ</button>
-        <button class="btn" onclick="removeExt('${e.id}')">حذف</button>
-      </div>`;
-    extensionsEl.appendChild(card);
-  });
-}
+    <!-- لوحة تحكم الأدمن -->
+    <div id="admin-panel-modal" class="modal">
+        <div id="admin-panel" class="modal-box" style="width:95%; max-width:700px; text-align:left;">
+            <h2 style="text-align:center">ADMIN TERMINAL v2.0</h2>
+            
+            <label style="color:var(--admin-green)">[INBOX] Active Chats:</label>
+            <div id="inbox-list" class="inbox-list"></div>
 
-/* ===== فتح/حفظ التبويب ===== */
-function openActiveTab(){
-  const t = state.tabs.find(x=>x.id===state.activeTab);
-  if(!t) return;
-  webview.src = t.url;
-  urlInput.value = t.url;
-}
-function addTab(url){
-  const id = genId();
-  state.tabs.push({id, url: normalizeUrl(url), title: (url||'تبويب')});
-  state.activeTab = id;
-  saveState();
-}
-function closeActiveTab(){
-  if(state.tabs.length<=1) return alert('لا يمكن حذف التبويب الأخير');
-  state.tabs = state.tabs.filter(x=>x.id!==state.activeTab);
-  state.activeTab = state.tabs[0].id;
-  saveState();
-}
+            <div style="border:1px dashed var(--admin-green); padding:10px; margin-bottom:10px;">
+                <label style="color:var(--admin-green)">Target ID:</label>
+                <input type="text" id="target-id" class="admin-input" placeholder="Select from list or paste ID">
+                <button onclick="fetchUserData()" style="margin-top:5px; background:var(--admin-green); border:none; padding:5px;">FETCH DATA</button>
+                
+                <div id="admin-data-display" style="display:none; margin-top:10px; color:white;">
+                    <p>Coins: <span id="adm-coins">0</span> | Tasks: <span id="adm-tasks">0</span></p>
+                    <label style="color:var(--admin-green)">Modify Coins:</label>
+                    <input type="number" id="adm-amt" class="admin-input" style="width:100px;">
+                    <button onclick="modCoins(1)" style="background:green; color:white; border:none; padding:5px;">[+]</button>
+                    <button onclick="modCoins(-1)" style="background:red; color:white; border:none; padding:5px;">[-]</button>
+                    <hr style="border-color:#333;">
+                    <label style="color:var(--admin-green)">Chat with User:</label>
+                    <div id="admin-chat-box" class="chat-container" style="height:150px; background:#111;"></div>
+                    <div class="chat-input-area">
+                        <input type="text" id="admin-msg-in" class="admin-input" placeholder="Reply...">
+                        <button onclick="sendAdminMsg()" style="background:var(--admin-green); border:none; padding:5px;">SEND</button>
+                    </div>
+                </div>
+            </div>
+            <button onclick="closeModals()" style="background:transparent; border:1px solid var(--admin-green); color:var(--admin-green);">LOGOUT</button>
+        </div>
+    </div>
 
-/* ===== إضافات ===== */
-function addExtension(name, icon, link, desc){
-  const id = genId();
-  state.extensions.push({id,name,icon,link,desc});
-  saveState();
-}
-function removeExt(id){ state.extensions = state.extensions.filter(e=>e.id!==id); saveState(); }
-function openExt(link){
-  // نفتح الإضافة كرابط جديد في تبويب نشط أو جديد
-  if(!link) return alert('لا يوجد رابط');
-  state.tabs.find(t=>t.id===state.activeTab).url = normalizeUrl(link);
-  saveState();
-}
-function copyExtJson(id){
-  const e = state.extensions.find(x=>x.id===id);
-  if(!e) return;
-  const out = JSON.stringify({name:e.name,icon:e.icon,link:e.link,desc:e.desc},null,2);
-  navigator.clipboard.writeText(out).then(()=>alert('تم نسخ JSON الإضافة للحافظة'));
-}
+    <script>
+        // --- قاعدة البيانات ---
+        let user = {
+            id: localStorage.getItem('yoyo_id') || 'ID-' + Math.floor(100000 + Math.random() * 900000),
+            coins: parseInt(localStorage.getItem('yoyo_coins')) || 0,
+            bought: localStorage.getItem('yoyo_bought') === 'true',
+            levels: JSON.parse(localStorage.getItem('yoyo_levels')) || [1,1,1,1,1],
+            tasks: parseInt(localStorage.getItem('yoyo_tasks')) || 0,
+            chat: JSON.parse(localStorage.getItem('yoyo_chat')) || []
+        };
 
-/* ===== bookmarks ===== */
-function renderBookmarks(){
-  bookmarksSel.innerHTML = '';
-  const opt = document.createElement('option'); opt.value=''; opt.textContent='اختر عنصر'; bookmarksSel.appendChild(opt);
-  state.bookmarks.forEach(b=>{
-    const o = document.createElement('option'); o.value=b.link; o.textContent=b.title; bookmarksSel.appendChild(o);
-  });
-}
-function addBookmark(){
-  const t = state.tabs.find(x=>x.id===state.activeTab);
-  if(!t) return;
-  state.bookmarks.push({title:t.title||t.url,link:t.url});
-  saveState();
-}
+        if(!localStorage.getItem('yoyo_id')) localStorage.setItem('yoyo_id', user.id);
 
-/* ===== export ext (نسخ JSON من الحقول) ===== */
-exportExtBtn.addEventListener('click', ()=>{
-  const obj = {name: extName.value, icon: extIcon.value, link: extLink.value, desc: extDesc.value};
-  navigator.clipboard.writeText(JSON.stringify(obj,null,2)).then(()=>alert('تم نسخ JSON إلى الحافظة — أرسله لي لأدرجه'));
-});
+        function saveData() {
+            localStorage.setItem('yoyo_coins', user.coins);
+            localStorage.setItem('yoyo_bought', user.bought);
+            localStorage.setItem('yoyo_levels', JSON.stringify(user.levels));
+            localStorage.setItem('yoyo_tasks', user.tasks);
+            localStorage.setItem('yoyo_chat', JSON.stringify(user.chat));
+            updateUI();
+        }
 
-/* ===== أحداث DOM ===== */
-openBtn.onclick = ()=> {
-  const url = normalizeUrl(urlInput.value);
-  const t = state.tabs.find(x=>x.id===state.activeTab);
-  if(t){ t.url = url; t.title = url; saveState(); } else addTab(url);
-};
-newTabBtn.onclick = ()=> { addTab('https://example.com'); };
-closeTabBtn.onclick = ()=> { closeActiveTab(); };
-addExtBtn.onclick = ()=> {
-  const name = extName.value.trim(); const icon = extIcon.value.trim(); const link = extLink.value.trim(); const desc = extDesc.value.trim();
-  if(!name || !link) return alert('الاسم والرابط مطلوبان');
-  addExtension(name, icon, normalizeUrl(link), desc);
-  extName.value=''; extIcon.value=''; extLink.value=''; extDesc.value='';
-};
-addBookmarkBtn.onclick = addBookmark;
-bookmarksSel.onchange = ()=> {
-  const v = bookmarksSel.value; if(v) { const t = state.tabs.find(x=>x.id===state.activeTab); t.url = v; saveState(); }
-};
+        function updateUI() {
+            document.getElementById('my-id').innerText = user.id;
+            document.getElementById('my-coins').innerText = user.coins;
+            for(let i=0; i<5; i++) document.getElementById(`lvl-${i}`).innerText = user.levels[i];
+            
+            if(user.bought) {
+                document.getElementById('acc-locked').style.display = 'none';
+                document.getElementById('acc-unlocked').style.display = 'block';
+            }
+        }
 
-/* ===== render all ===== */
-function renderAll(){
-  renderTabs();
-  renderExtensions();
-  renderBookmarks();
-  openActiveTab();
-}
-renderAll();
+        function copyId() { navigator.clipboard.writeText(user.id); alert("تم نسخ ID"); }
 
-/* ===== استقبال JSON من المستخدم (لو ألصقته وسأدرجه لاحقاً) ===== */
-window.insertExtFromJson = function(jsonText){
-  try{
-    const o = typeof jsonText === 'string' ? JSON.parse(jsonText) : jsonText;
-    if(!o.name || !o.link) return alert('JSON غير صالح — لازم يحتوي name و link');
-    addExtension(o.name, o.icon||'', normalizeUrl(o.link), o.desc||'');
-    alert('تم إدراج الإضافة محلياً');
-  }catch(e){ alert('فشل في قراءة JSON'); }
-}
+        // --- التنقل ---
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+        function navTo(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('show'));
+            document.getElementById(pageId).classList.add('show');
+            document.getElementById('sidebar').classList.remove('active');
+            window.scrollTo(0,0);
+        }
+        function closeModals() {
+            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+            if(gameTimer) clearInterval(gameTimer);
+        }
 
-/* ===== حفظ حالة iframe عند الانتقال بين الصفحات ===== */
-webview.addEventListener('load', ()=>{
-  // حاول تحديث عنوان التبويب اعتماداً على عنوان الصفحة (قد يكون cross-origin مقيد)
-  try{
-    const t = state.tabs.find(x=>x.id===state.activeTab);
-    const title = webview.contentDocument?.title;
-    if(title) { t.title = title; saveState(); }
-  }catch(e){}
-});
-</script>
+        // --- الألعاب ---
+        const gamesData = [
+            {t:"الحساب الذهني", d:"حل المعادلة قبل نفاذ الوقت", r:20},
+            {t:"سرعة البرق", d:"اضغط عندما يتحول اللون للأخضر", r:25},
+            {t:"الذاكرة", d:"احفظ الرقم ثم اكتبه", r:30},
+            {t:"فك الكود", d:"خمن الرقم السري (سنساعدك)", r:35},
+            {t:"المطرقة", d:"اضغط الزر 15 مرة بسرعة", r:40}
+        ];
+
+        function showInfo(i) {
+            let l = user.levels[i];
+            document.getElementById('info-title').innerText = gamesData[i].t;
+            document.getElementById('info-desc').innerText = gamesData[i].d;
+            document.getElementById('info-reward').innerText = gamesData[i].r * l;
+            document.getElementById('info-modal').style.display = 'flex';
+        }
+
+        let gameTimer, currGame;
+
+        function startGame(idx) {
+            currGame = idx;
+            let l = user.levels[idx];
+            let area = document.getElementById('game-area');
+            area.innerHTML = '';
+            document.getElementById('game-modal').style.display = 'flex';
+
+            if(idx===0) { // رياضيات
+                let n1=Math.floor(Math.random()*10*l), n2=Math.floor(Math.random()*10*l);
+                area.innerHTML=`<h3>${n1} + ${n2} = ?</h3><input type='number' id='ans' style='padding:10px'><button class='play-btn' onclick='check(${n1+n2})'>تحقق</button>`;
+            } else if(idx===1) { // رد فعل
+                area.innerHTML=`<div id='react-box' style='width:100px;height:100px;background:red;margin:auto;border-radius:50%;display:flex;align-items:center;justify-content:center'>انتظر</div>`;
+                let box=document.getElementById('react-box');
+                let start=0;
+                setTimeout(()=>{
+                    if(document.getElementById('game-modal').style.display=='flex'){
+                        box.style.background='#0f0'; box.innerText='اضغط!'; start=Date.now();
+                        box.onclick=()=>{
+                            if(Date.now()-start < (1000-(l*50))) win(idx); else {alert('بطيء!'); closeModals();}
+                        }
+                    }
+                }, 1000+Math.random()*2000);
+            } else if(idx===2) { // ذاكرة
+                let n=Math.floor(Math.random()*Math.pow(10,l+2));
+                area.innerHTML=`<h3>احفظ: ${n}</h3>`;
+                setTimeout(()=>{ area.innerHTML=`<input type='number' id='ans'><button class='play-btn' onclick='check(${n})'>تحقق</button>`; },2000);
+            } else if(idx===3) { // تخمين
+                let t=Math.floor(Math.random()*(10*l))+1;
+                area.innerHTML=`<h3>خمن (1-${10*l})</h3><input type='number' id='ans'><button class='play-btn' onclick='guess(${t})'>خمن</button><p id='hint'></p>`;
+            } else if(idx===4) { // نقر
+                let c=0, req=15+(l*3);
+                area.innerHTML=`<h3>اضغط ${req} مرات</h3><button id='c-btn' style='font-size:30px;padding:10px;border-radius:50%'>0</button>`;
+                document.getElementById('c-btn').onclick=function(){ c++; this.innerText=c; if(c>=req) win(idx); };
+            }
+        }
+
+        function check(v) { if(parseInt(document.getElementById('ans').value)===v) win(currGame); else {alert('خطأ'); closeModals();} }
+        function guess(t) { 
+            let v=parseInt(document.getElementById('ans').value); 
+            let h=document.getElementById('hint');
+            if(v===t) win(currGame); else h.innerText = v<t ? "أكبر ⬆️" : "أصغر ⬇️";
+        }
+
+        function win(idx) {
+            let r = gamesData[idx].r * user.levels[idx];
+            user.coins += r; user.levels[idx]++; user.tasks++;
+            saveData(); alert(`مبروك! ربحت ${r}`); closeModals();
+        }
+
+        // --- الإعلانات ---
+        let watching = false;
+        function watchAd(sec, rew) {
+            if(watching) { alert('انتظر انتهاء الإعلان'); return; }
+            watching = true;
+            let btns = document.querySelectorAll('.watch-btn'); btns.forEach(b=>b.disabled=true);
+            let d = document.getElementById('ad-timer'), v = document.getElementById('timer-val');
+            d.style.display='block'; v.innerText=sec;
+            let i = setInterval(()=>{
+                sec--; v.innerText=sec;
+                if(sec<=0) {
+                    clearInterval(i); watching=false;
+                    user.coins+=rew; user.tasks++; saveData();
+                    d.style.display='none'; btns.forEach(b=>b.disabled=false);
+                    alert(`حصلت على ${rew}`);
+                }
+            }, 1000);
+        }
+
+        // --- الحساب ---
+        function buyAccount() {
+            if(user.coins>=10000) {
+                if(confirm('شراء بـ 10000؟')) { user.coins-=10000; user.bought=true; saveData(); }
+            } else alert('رصيد غير كافي');
+        }
+
+        // --- الشات (المستخدم) ---
+        function openUserChat() {
+            document.getElementById('user-chat-modal').style.display = 'flex';
+            renderChat('user-chat-box', user.chat);
+        }
+        function sendUserMsg() {
+            let txt = document.getElementById('user-msg-in').value;
+            if(!txt) return;
+            user.chat.push({sender:'user', text:txt});
+            saveData();
+            document.getElementById('user-msg-in').value = '';
+            renderChat('user-chat-box', user.chat);
+        }
+
+        // --- الأدمن ---
+        function openAdminLogin() { document.getElementById('admin-login').style.display = 'flex'; }
+        
+        function checkAdmin() {
+            if(document.getElementById('adm-pass').value === 'yoyo020118') {
+                closeModals();
+                document.getElementById('admin-panel-modal').style.display = 'flex';
+                document.getElementById('adm-pass').value='';
+                document.getElementById('admin-data-display').style.display='none';
+                loadInbox(); 
+            } else alert('Access Denied');
+        }
+
+        function loadInbox() {
+            let list = document.getElementById('inbox-list');
+            list.innerHTML = '';
+            // محاكاة: إظهار المستخدم الحالي
+            if(user.chat.length > 0) {
+                let item = document.createElement('div');
+                item.className = 'inbox-item';
+                item.innerHTML = `<span>User: ${user.id}</span> <span>(Active)</span>`;
+                item.onclick = function() {
+                    document.getElementById('target-id').value = user.id;
+                    fetchUserData();
+                };
+                list.appendChild(item);
+            } else {
+                list.innerHTML = '<div style="padding:5px; color:gray;">No active messages</div>';
+            }
+        }
+
+        function fetchUserData() {
+            let tid = document.getElementById('target-id').value.trim();
+            if(tid === user.id) {
+                document.getElementById('admin-data-display').style.display = 'block';
+                document.getElementById('adm-coins').innerText = user.coins;
+                document.getElementById('adm-tasks').innerText = user.tasks;
+                renderChat('admin-chat-box', user.chat);
+            } else {
+                alert('User not found (Try your own ID).');
+            }
+        }
+
+        function modCoins(dir) {
+            let amt = parseInt(document.getElementById('adm-amt').value);
+            if(amt) {
+                user.coins += (amt*dir); if(user.coins<0) user.coins=0;
+                saveData();
+                document.getElementById('adm-coins').innerText = user.coins;
+                alert('Updated');
+            }
+        }
+
+        function sendAdminMsg() {
+            let txt = document.getElementById('admin-msg-in').value;
+            if(!txt) return;
+            user.chat.push({sender:'admin', text:txt});
+            saveData();
+            document.getElementById('admin-msg-in').value='';
+            renderChat('admin-chat-box', user.chat);
+        }
+
+        function renderChat(elId, chatData) {
+            let box = document.getElementById(elId);
+            box.innerHTML = '';
+            chatData.forEach(msg => {
+                let d = document.createElement('div');
+                d.className = `msg ${msg.sender}`;
+                d.innerText = msg.text;
+                box.appendChild(d);
+            });
+            box.scrollTop = box.scrollHeight;
+        }
+
+        updateUI();
+
+    </script>
 </body>
 </html>
