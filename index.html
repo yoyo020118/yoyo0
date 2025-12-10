@@ -2,706 +2,1378 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YOYO Games Network</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>YOYO V24 - ULTRA EDITION</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* --- الألوان والتصميم العام --- */
-        :root {
-            --bg-main: #1e1e2e;
-            --primary: #f9ca24;
-            --secondary: #6c5ce7;
-            --accent: #eb4d4b;
-            --text: #ffffff;
-            --card: #2d3436;
-            --admin-green: #00ff00;
+        /* --- التصميم الأساسي --- */
+        :root { 
+            --bg: #1e272e; 
+            --primary: #00d2d3; 
+            --sec: #54a0ff; 
+            --card: #2f3640; 
+            --txt: #fff; 
+            --gold: #f1c40f; 
+            --danger: #ff4757;
         }
+        body { font-family: 'Tajawal', sans-serif; background: var(--bg); color: var(--txt); margin:0; padding-bottom:80px; overflow-x:hidden; user-select:none; transition: background 0.5s; }
+        button { font-family: 'Tajawal', sans-serif; cursor:pointer; transition:0.2s; } button:active{transform:scale(0.95);}
+        input { font-family: 'Tajawal', sans-serif; }
 
-        body {
-            font-family: 'Tajawal', sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text);
-            margin: 0;
-            padding: 0;
-            user-select: none;
-            overflow-x: hidden;
-            padding-bottom: 80px; /* مساحة للزر العائم */
-        }
+        /* شاشة التحميل */
+        #loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.5s; }
+        .loader { border: 5px solid #333; border-top: 5px solid var(--primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        button { font-family: 'Tajawal', sans-serif; cursor: pointer; transition: 0.3s; }
-        button:active { transform: scale(0.95); }
+        /* إشعارات Toast الاحترافية (جديد) */
+        #toast-container { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 10000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast { background: rgba(0,0,0,0.9); color: white; padding: 12px 25px; border-radius: 50px; font-size: 14px; animation: slideUp 0.3s ease; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); border: 1px solid #444; min-width: 200px; justify-content: center; pointer-events: auto; }
+        .toast.success { border-color: #2ecc71; color: #2ecc71; }
+        .toast.error { border-color: #e74c3c; color: #e74c3c; }
+        .toast.info { border-color: var(--primary); color: var(--primary); }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        /* --- الشريط العلوي --- */
-        .header {
-            background: rgba(0,0,0,0.9);
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 3px solid var(--secondary);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
+        /* شريط الأخبار العاجلة */
+        #breaking-news-bar { background: red; color: white; padding: 5px; font-size: 14px; white-space: nowrap; overflow: hidden; display: none; }
+        #breaking-text { display: inline-block; animation: scrollLeft 15s linear infinite; }
+        @keyframes scrollLeft { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
 
-        .user-badge {
-            background: #333;
-            padding: 5px 15px;
-            border-radius: 20px;
-            border: 1px solid var(--primary);
-            font-size: 14px;
-        }
+        .header { background:rgba(0,0,0,0.95); padding:10px 15px; display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid var(--primary); position:sticky; top:0; z-index:100; transition: border-color 0.5s; }
+        .user-badge { background:#333; padding:5px 15px; border-radius:20px; border:1px solid var(--primary); font-size:12px; display:flex; gap:10px; align-items:center; }
+        .user-avatar-small { width:30px; height:30px; border-radius:50%; background:#555; object-fit: cover; border:1px solid white; }
 
-        #my-id { color: var(--primary); font-weight: bold; cursor: copy; }
+        /* القائمة الجانبية */
+        .sidebar { position:fixed; top:0; right:-280px; width:280px; height:100%; background:var(--card); z-index:200; transition:0.4s; padding-top:60px; box-shadow:-5px 0 20px #000; display:flex; flex-direction:column; overflow-y:auto; }
+        .sidebar.active { right:0; }
+        .nav-btn { background:none; border:none; color:white; padding:15px; text-align:right; border-bottom:1px solid #444; font-size:18px; width:100%; position:relative; }
+        .notif-dot { width:10px; height:10px; background:red; border-radius:50%; position:absolute; top:15px; left:15px; display:none; box-shadow:0 0 5px red; }
 
-        .menu-icon {
-            font-size: 24px;
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-        }
+        /* الصفحات */
+        .page { display:none; padding:20px; max-width:800px; margin:0 auto; animation:fadeIn 0.5s; }
+        .page.active { display:block; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 
-        /* --- القائمة الجانبية --- */
-        .sidebar {
-            position: fixed;
-            top: 0; right: -260px;
-            width: 260px;
-            height: 100%;
-            background: var(--card);
-            box-shadow: -5px 0 15px rgba(0,0,0,0.5);
-            transition: 0.4s;
-            z-index: 200;
-            padding-top: 60px;
-            display: flex;
+        /* البطاقات */
+        .profile-card { background: linear-gradient(135deg, var(--card), #000); border: 2px solid var(--primary); border-radius: 15px; padding: 20px; margin: 20px auto; max-width: 350px; text-align: center; box-shadow: 0 0 20px rgba(0,0,0, 0.5); transition: border-color 0.5s; position:relative; overflow:hidden; }
+        .copy-btn { background: var(--primary); color: black; border: none; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-right: 5px; }
+
+        /* شريط XP (جديد) */
+        .xp-container { width: 100%; height: 5px; background: #333; margin-top: 5px; border-radius: 5px; overflow: hidden; }
+        .xp-bar { height: 100%; background: linear-gradient(90deg, #00b894, #55efc4); width: 0%; transition: width 0.5s; }
+        .bio-text { color: #aaa; font-size: 12px; font-style: italic; margin-top: 5px; }
+
+        /* الألعاب */
+        .game-card { background:linear-gradient(145deg, #1e272e, #111); padding:20px; border-radius:15px; border:1px solid #333; transition:0.3s; overflow:hidden; text-align:center; margin-bottom:15px; }
+        .btn-main { width:100%; background:var(--primary); color:black; border:none; padding:10px; margin-top:10px; border-radius:5px; font-weight:bold; font-size:16px; box-shadow: 0 4px 0 rgba(0,0,0,0.5); transition: background 0.5s; }
+        .btn-main:active { transform: translateY(4px); box-shadow: none; }
+        
+        /* الشات */
+        .chat-container { display:flex; flex-direction:column; gap:10px; padding:10px; height:350px; overflow-y:auto; background:#151520; border-radius:10px; border:1px solid #333; }
+        .msg-bubble { max-width: 75%; padding: 10px 15px; border-radius: 15px; font-size: 14px; position: relative; word-wrap: break-word; line-height: 1.4; animation: popIn 0.3s ease; }
+        .msg-user { background: linear-gradient(135deg, var(--sec), var(--primary)); color: white; align-self: flex-start; margin-right: auto; margin-left: 0; border-bottom-right-radius: 2px; }
+        .msg-admin { background: #333; color: #ddd; align-self: flex-end; margin-left: auto; margin-right: 0; border-bottom-left-radius: 2px; border: 1px solid #555; }
+        .chat-mine { background:var(--sec); align-self:flex-end; border-bottom-left-radius:0; margin-left:auto; }
+        .chat-other { background:#444; align-self:flex-start; border-bottom-right-radius:0; margin-right:auto; }
+
+        /* شارات VIP و Admin والكلانات */
+        .vip-badge { background: linear-gradient(45deg, #f1c40f, #e67e22); color: black; padding: 2px 8px; border-radius: 8px; font-weight: bold; font-size: 10px; margin-left: 5px; box-shadow: 0 0 8px #f1c40f; border: 1px solid white; display: inline-block; }
+        .admin-badge { background: red; color: white; padding: 2px 8px; border-radius: 8px; font-weight: bold; font-size: 10px; margin-left: 5px; box-shadow: 0 0 8px red; border: 1px solid white; display: inline-block; }
+        .clan-badge { background: #8e44ad; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-family: monospace; border: 1px solid #9b59b6; margin-left:5px; }
+
+        /* ألوان الأسماء */
+        .name-gold { color: #ffd700 !important; text-shadow: 0 0 5px #b8860b; font-weight: bold; }
+        .name-red { color: #ff4757 !important; text-shadow: 0 0 5px #c0392b; font-weight: bold; }
+        .name-blue { color: #00d2d3 !important; text-shadow: 0 0 5px #009797; font-weight: bold; }
+
+        /* الأفاتار */
+        .avatar-grid { display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin:15px 0; }
+        .avatar-option { width:50px; height:50px; border-radius:50%; border:2px solid transparent; cursor:pointer; }
+        .leader-item { background:#222; padding:10px; margin-bottom:5px; border-radius:5px; display:flex; justify-content:space-between; align-items:center; }
+        .rank-badge { width:25px; height:25px; border-radius:50%; background:var(--gold); color:black; display:flex; align-items:center; justify-content:center; font-weight:bold; }
+
+        /* لعبة BATTLE ARENA */
+        #game-wrapper { position: relative; width: 100%; max-width: 600px; margin: 0 auto; height: 350px; overflow: hidden; border: 4px solid #555; border-radius: 10px; background: #2d3436; box-shadow: 0 0 20px #000; background-image: linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px); background-size: 40px 40px; }
+        #soccer-canvas { display: block; width: 100%; height: 100%; }
+        .score-board { position: absolute; top: 5px; left: 0; width: 100%; display: flex; justify-content: center; gap: 20px; z-index: 10; }
+        .player-stat { background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 5px; color: white; border: 1px solid #555; display:flex; align-items:center; gap:5px; }
+        .hp-bar-mini { width: 50px; height: 5px; background: red; margin-top: 3px; }
+        .hp-val { width: 100%; height: 100%; background: #0f0; transition: width 0.1s; }
+        
+        /* عناصر التحكم المحسنة (Joystick) */
+        .touch-controls { position: absolute; bottom: 10px; left: 0; width: 100%; height: 120px; pointer-events: none; display: flex; justify-content: space-between; padding: 0 20px; box-sizing: border-box; }
+        .joystick-area { pointer-events: auto; width: 120px; height: 120px; background: rgba(255,255,255,0.05); border-radius: 50%; border: 2px solid rgba(255,255,255,0.1); position: relative; display: flex; justify-content: center; align-items: center; }
+        .joystick-knob { width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 50%; position: absolute; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .action-btn { pointer-events: auto; display: flex; align-items: center; }
+        .btn-fire { width: 70px; height: 70px; border-radius: 50%; background: rgba(231, 76, 60, 0.4); border: 2px solid #e74c3c; font-size: 30px; display:flex; justify-content:center; align-items:center; color:white; transition:0.1s; }
+        .btn-fire:active { background: #e74c3c; transform: scale(0.9); }
+        
+        .room-box { background: #222; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid var(--primary); }
+
+        /* النوافذ */
+        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:300; justify-content:center; align-items:center; }
+        .modal-box { background:var(--card); width:90%; max-width:600px; padding:20px; border-radius:15px; border:1px solid var(--sec); text-align:center; max-height:90vh; overflow-y:auto; position: relative; }
+        .float-btn { position:fixed; bottom:20px; right:20px; background:linear-gradient(45deg, #ff9f43, #ee5253); color:white; border:none; padding:12px 25px; border-radius:50px; font-weight:bold; box-shadow:0 5px 15px #000; z-index:150; }
+        
+        /* --------------------------------- */
+        /* --- لوحة الأدمن (ULTIMATE) --- */
+        /* --------------------------------- */
+        .admin-trigger-btn { position:fixed; bottom:10px; left:10px; width:40px; height:40px; opacity:0.1; background:red; z-index:200; border:none; border-radius:50%; }
+        .adm-header { display:flex; gap:10px; padding-bottom:15px; border-bottom:2px solid var(--gold); margin-bottom:15px; overflow-x:auto; }
+        .adm-nav-btn { background:transparent; border:1px solid #444; color:#aaa; padding:8px 15px; border-radius:20px; white-space:nowrap; position:relative; }
+        .adm-nav-btn.active { background:var(--gold); color:black; border-color:var(--gold); font-weight:bold; }
+        .adm-section { display:none; animation:fadeIn 0.3s; height: 100%; }
+        .adm-section.active { display:block; }
+        .online-list-container { max-height:300px; overflow-y:auto; background:#151515; border-radius:10px; }
+        .online-user-row { display:flex; align-items:center; justify-content:space-between; padding:12px; border-bottom:1px solid #333; transition:0.2s; }
+        .online-user-row:hover { background:#252525; }
+        .online-status { width:8px; height:8px; background:#0f0; border-radius:50%; display:inline-block; margin-left:5px; }
+
+        /* زر التحكم في المستخدم */
+        .btn-ctrl-user { background: var(--primary); color: black; border: none; padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: bold; margin-right: 5px; }
+
+        .support-layout { display:flex; height:100%; gap:10px; }
+        .support-list { width:35%; border-left:1px solid #333; overflow-y:auto; background:#111; border-radius:5px; height: 400px; }
+        .support-chat-view { width:65%; display:flex; flex-direction:column; background:#111; border-radius:5px; padding:5px; height: 400px; }
+        .chat-list-item { padding:15px; border-bottom:1px solid #333; cursor:pointer; position:relative; transition:0.2s; text-align:right; }
+        .chat-list-item.active { background:#333; border-right:3px solid var(--primary); }
+        .unread-badge { width:10px; height:10px; background:red; border-radius:50%; position:absolute; top:15px; left:10px; box-shadow: 0 0 5px red; display:none; }
+        .global-badge { position:absolute; top:-5px; left:-5px; background:red; color:white; font-size:10px; padding:2px 5px; border-radius:50%; display:none; }
+
+        .settings-grid { display:grid; grid-template-columns: 1fr 1fr; gap:15px; text-align:right; }
+        .setting-card { background:#1a1a1a; padding:15px; border-radius:10px; border:1px solid #333; }
+        .setting-label { display:block; margin-bottom:5px; color:#ccc; }
+        .custom-input { width:100%; padding:10px; background:#333; border:1px solid #555; color:white; border-radius:5px; margin-bottom:10px; text-align:center; }
+        .save-btn { grid-column:span 2; background:var(--primary); color:black; font-weight:bold; padding:15px; margin-top:10px; border-radius:10px; }
+        
+        .adm-table { width:100%; border-collapse:collapse; color:#ccc; font-size:12px; }
+        .adm-table th, .adm-table td { border:1px solid #333; padding:8px; text-align:center; }
+        .adm-table th { background:#222; color:var(--primary); }
+
+        /* نافذة التحكم بالمتصلين المحسنة */
+        #user-control-browser { 
+            display:none; 
+            position:fixed; 
+            top:50%; left:50%; 
+            transform:translate(-50%, -50%); 
+            width:90%; max-width:400px; 
+            background:#2c3e50; 
+            border:2px solid var(--gold); 
+            border-radius:15px; 
+            padding:20px; 
+            z-index:99999; 
+            box-shadow:0 0 50px rgba(0,0,0,0.8);
             flex-direction: column;
         }
-        .sidebar.active { right: 0; }
-        
-        .nav-btn {
-            background: transparent;
-            border: none;
-            color: white;
-            padding: 15px 20px;
-            text-align: right;
-            border-bottom: 1px solid #444;
-            font-size: 18px;
-        }
-        .nav-btn:hover { background: var(--secondary); padding-right: 30px; }
 
-        /* --- الصفحات --- */
-        .page {
-            display: none;
-            padding: 20px;
-            max-width: 800px;
-            margin: 0 auto;
-            animation: slideUp 0.5s ease;
-        }
-        .page.show { display: block; }
-        @keyframes slideUp { from {opacity:0; transform:translateY(20px);} to {opacity:1; transform:translateY(0);} }
+        .ctrl-panel-header { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:10px; }
+        .action-grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:15px; }
+        .act-btn { padding:10px; border:none; border-radius:5px; font-weight:bold; color:white; cursor:pointer; transition:0.2s; }
+        .act-btn:active { transform:scale(0.95); }
+        .act-add { background: #2ecc71; }
+        .act-sub { background: #e67e22; }
+        .act-ban { background: #c0392b; }
+        .act-mute { background: #7f8c8d; }
+        .act-freeze { background: #3498db; }
 
-        /* --- تصميم الألعاب --- */
-        .games-wrapper {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-        }
-        .game-card {
-            background: var(--card);
-            border-radius: 15px;
-            padding: 20px;
-            position: relative;
-            border: 2px solid transparent;
-        }
-        .game-card:hover { border-color: var(--secondary); }
-        
-        .info-btn {
-            position: absolute;
-            top: 10px; left: 10px;
-            width: 30px; height: 30px;
-            background: var(--primary);
-            color: black;
-            border-radius: 50%;
-            font-weight: bold;
-            display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 0 10px var(--primary);
-            cursor: pointer;
-            z-index: 10;
-        }
+        /* ستايل زر حذف الرسالة في المراقبة */
+        .monitor-msg-row { display:flex; justify-content:space-between; align-items:center; padding:5px; background:#222; margin-bottom:5px; border-radius:5px; border-right:3px solid #555; }
+        .monitor-actions { display:flex; gap:5px; }
+        .btn-del-msg { background:red; color:white; border:none; border-radius:3px; padding:2px 5px; cursor:pointer; }
+        .btn-ban-user { background:black; color:red; border:1px solid red; border-radius:3px; padding:2px 5px; cursor:pointer; }
 
-        .play-btn {
-            width: 100%;
-            padding: 10px;
-            background: var(--secondary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            margin-top: 15px;
-            font-weight: bold;
-        }
+        #global-alert-modal { z-index: 500; }
+        .alert-box { background: linear-gradient(135deg, #000, #333); border: 2px solid red; padding: 30px; text-align: center; border-radius: 20px; box-shadow: 0 0 50px red; animation: popIn 0.5s; }
+        @keyframes popIn { from{transform:scale(0)} to{transform:scale(1)} }
 
-        /* --- الحساب --- */
-        .account-details {
-            display: none;
-            background: #000;
-            border: 2px dashed var(--accent);
-            padding: 20px;
-            position: relative;
+        /* Google Btn Style */
+        .google-btn {
+            background: white; color: #444; width: 80%; border: none; padding: 10px; border-radius: 5px; 
+            font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;
         }
-        .anti-screenshot {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0px, transparent 10px);
-            display: flex; justify-content: center; align-items: center;
-            font-size: 30px; color: rgba(255,0,0,0.2);
-            transform: rotate(-20deg);
-            pointer-events: none;
-        }
-
-        /* --- الإعلانات --- */
-        .ad-item {
-            background: var(--card);
-            margin: 10px 0;
-            padding: 15px;
-            border-radius: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-right: 5px solid var(--primary);
-        }
-        .watch-btn {
-            background: var(--primary);
-            color: black;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-        .watch-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        /* --- زر الدعم الفني الظاهر --- */
-        #support-float-btn {
-            position: fixed;
-            bottom: 20px; 
-            right: 20px;
-            background: linear-gradient(45deg, var(--secondary), #a29bfe);
-            color: white;
-            padding: 12px 25px;
-            border-radius: 30px;
-            border: none;
-            font-size: 16px;
-            font-weight: bold;
-            box-shadow: 0 5px 20px rgba(108, 92, 231, 0.5);
-            z-index: 150;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        #support-float-btn:hover {
-            transform: scale(1.05);
-        }
-
-        /* --- النوافذ المنبثقة --- */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 300;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-box {
-            background: var(--card);
-            width: 90%; max-width: 500px;
-            padding: 20px;
-            border-radius: 15px;
-            border: 1px solid var(--secondary);
-            text-align: center;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        /* --- الشات --- */
-        .chat-container {
-            height: 300px;
-            background: #1a1a1a;
-            border: 1px solid #444;
-            border-radius: 10px;
-            padding: 10px;
-            overflow-y: auto;
-            margin-bottom: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .msg { padding: 8px 12px; border-radius: 10px; max-width: 80%; width: fit-content; }
-        .msg.user { background: var(--secondary); color: white; align-self: flex-end; border-bottom-left-radius: 0; }
-        .msg.admin { background: #444; color: white; align-self: flex-start; border-bottom-right-radius: 0; }
-        
-        .chat-input-area { display: flex; gap: 10px; }
-        .chat-input-area input { flex: 1; padding: 10px; border-radius: 5px; border: none; }
-
-        /* --- لوحة الأدمن --- */
-        #admin-panel {
-            background: #000;
-            border: 2px solid var(--admin-green);
-            background-image: linear-gradient(rgba(0, 255, 0, 0.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 255, 0, 0.05) 1px, transparent 1px);
-            background-size: 20px 20px;
-        }
-        #admin-panel * { font-family: 'Courier New', monospace; }
-        .admin-input { background: #111; border: 1px solid var(--admin-green); color: var(--admin-green); padding: 5px; width: 100%; }
-        
-        .inbox-list {
-            text-align: right;
-            border: 1px solid var(--admin-green);
-            max-height: 150px;
-            overflow-y: auto;
-            margin-bottom: 15px;
-        }
-        .inbox-item {
-            padding: 5px;
-            border-bottom: 1px solid #333;
-            cursor: pointer;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-        }
-        .inbox-item:hover { background: #111; color: var(--admin-green); }
-
-        /* زر الأدمن المخفي (يسار أسفل) */
-        #hidden-admin-btn {
-            position: fixed;
-            bottom: 5px; left: 5px;
-            width: 30px; height: 30px;
-            background: transparent;
-            border: none;
-            z-index: 200;
-        }
+        .google-btn img { width: 20px; }
 
     </style>
 </head>
-<body>
+<body class="ar">
 
-    <!-- الشريط العلوي -->
+    <!-- حاوية الإشعارات الجديدة -->
+    <div id="toast-container"></div>
+
+    <!-- شاشة التحميل -->
+    <div id="loading-screen">
+        <div class="loader"></div>
+        <h3 style="color:var(--primary); margin-top:20px;">جارٍ الاتصال...</h3>
+    </div>
+    
+    <!-- أصوات -->
+    <audio id="snd-click" src="https://assets.mixkit.co/sfx/preview/mixkit-modern-technology-select-3124.mp3"></audio>
+    <audio id="snd-shot" src="https://assets.mixkit.co/sfx/preview/mixkit-laser-gun-shot-3110.mp3"></audio>
+    <audio id="snd-hit" src="https://assets.mixkit.co/sfx/preview/mixkit-small-hit-in-a-game-2072.mp3"></audio>
+    <audio id="snd-win" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3"></audio>
+    <audio id="snd-notif" src="https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3"></audio>
+
+    <!-- شاشة الحظر الكامل -->
+    <div id="banned-screen" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:black; z-index:9999; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+        <h1 style="color:red; font-size:50px;">🚫</h1>
+        <h2 style="color:white;">لقد تم حظرك من الموقع</h2>
+        <p style="color:#777;">تم حظر حسابك بواسطة الإدارة.</p>
+    </div>
+
+    <!-- نافذة التحكم بالمستخدم (منفصلة لضمان الظهور) -->
+    <div id="user-control-browser">
+        <div class="ctrl-panel-header">
+            <div><h2 id="ctrl-target-name" style="margin:0; color:var(--primary);">User</h2><span id="ctrl-target-id" style="font-size:10px; color:#aaa;">...</span></div>
+            <button onclick="closeCtrlBrowser()" style="background:transparent; color:white; border:none; font-size:20px;">❌</button>
+        </div>
+        <div style="text-align:center; margin-bottom:20px;">الرصيد: <span id="ctrl-target-coins" style="color:gold; font-size:24px;">0</span></div>
+        <input type="number" id="ctrl-amount-input" class="custom-input" placeholder="الكمية">
+        <div class="action-grid">
+            <button class="act-btn act-add" onclick="modifyTargetCoins(1)">➕ زيادة عملات</button>
+            <button class="act-btn act-sub" onclick="modifyTargetCoins(-1)">➖ نقص عملات</button>
+            <button class="act-btn act-ban" onclick="banTargetUser()">🚫 حظر نهائي</button>
+            <button class="act-btn act-freeze" onclick="freezeTargetUser()">❄️ تجميد (Freeze)</button>
+            <button class="act-btn" style="background:cyan; color:black" onclick="unbanTargetUser()">✅ فك العقوبة</button>
+            <button class="act-btn act-mute" onclick="muteTargetUser()">🔇 كتم (Mute)</button>
+        </div>
+    </div>
+
+    <!-- تنبيه للجميع -->
+    <div id="global-alert-modal" class="modal">
+        <div class="alert-box">
+            <h1 style="color:red; font-size:40px;">⚠️ تنبيه هام</h1>
+            <p id="global-alert-text" style="font-size:20px; color:white;">...</p>
+            <button class="btn-main" onclick="document.getElementById('global-alert-modal').style.display='none'">موافق</button>
+        </div>
+    </div>
+
+    <!-- شريط الأخبار -->
+    <div id="breaking-news-bar"><span id="breaking-text">...</span></div>
+
     <div class="header">
-        <button class="menu-icon" onclick="toggleSidebar()">☰</button>
+        <div>
+            <button class="icon-btn" onclick="toggleSidebar()">☰</button>
+            <button class="icon-btn" onclick="openSettings()">⚙️</button>
+        </div>
         <div class="user-badge">
-            ID: <span id="my-id" onclick="copyId()">--</span> | 💰 <span id="my-coins">0</span>
+            <img id="header-avatar" src="" class="user-avatar-small">
+            <span id="user-display">Loading...</span>
         </div>
     </div>
 
     <!-- القائمة الجانبية -->
     <div id="sidebar" class="sidebar">
-        <button class="nav-btn" onclick="navTo('home')">🏠 الرئيسية</button>
-        <button class="nav-btn" onclick="navTo('games')">🎮 صالة الألعاب</button>
-        <button class="nav-btn" onclick="navTo('account')">👤 شراء الحساب</button>
-        <button class="nav-btn" onclick="navTo('ads')">📺 كسب العملات</button>
-        <!-- زر تواصل داخل القائمة أيضاً -->
-        <button class="nav-btn" onclick="openUserChat()" style="color: var(--primary);">📞 تواصل معنا</button>
-        <button class="nav-btn" onclick="toggleSidebar()" style="color:var(--accent); margin-top:auto;">إغلاق القائمة</button>
+        <button class="nav-btn" onclick="nav('home')">🏠 الرئيسية</button>
+        <button class="nav-btn" onclick="nav('games')" id="nav-games-btn">🎮 الألعاب</button>
+        <button class="nav-btn" onclick="nav('leaderboard')" style="color:gold">🏆 المتصدرين</button>
+        <button class="nav-btn" onclick="nav('global-chat')" style="color:#00d2d3">🌎 شات عام</button>
+        <button class="nav-btn" onclick="nav('bank')">🏦 البنك</button>
+        <button class="nav-btn" onclick="nav('account')">🛒 المتجر</button>
+        <button class="nav-btn" onclick="nav('ads')">📺 كسب العملات</button>
+        <button class="nav-btn" onclick="openSupport()" style="color:var(--primary)">
+            💬 الدعم
+            <div id="support-dot" class="notif-dot"></div>
+        </button>
+        <button class="nav-btn" onclick="toggleSidebar()" style="color:red;margin-top:auto">إغلاق</button>
     </div>
 
     <!-- 1. الرئيسية -->
-    <div id="home" class="page show">
-        <div style="text-align:center; padding-top:50px;">
-            <h1 style="font-size:3em; color:var(--primary)">YOYO WORLD</h1>
-            <p>أهلاً بك في عالم الجوائز والتحديات</p>
-            <br>
-            <button class="play-btn" style="width:200px;" onclick="navTo('games')">ابدأ اللعب الآن</button>
-        </div>
-    </div>
-
-    <!-- 2. صفحة الألعاب -->
-    <div id="games" class="page">
-        <h2>🎮 الألعاب (كل فوز يزيد الصعوبة)</h2>
-        <div class="games-wrapper">
-            <!-- لعبة 1 -->
-            <div class="game-card">
-                <div class="info-btn" onclick="showInfo(0)">!</div>
-                <h3>🔢 الحساب الذهني</h3>
-                <p>مستوى: <span id="lvl-0">1</span></p>
-                <button class="play-btn" onclick="startGame(0)">لعب</button>
-            </div>
-            <!-- لعبة 2 -->
-            <div class="game-card">
-                <div class="info-btn" onclick="showInfo(1)">!</div>
-                <h3>⚡ سرعة البرق</h3>
-                <p>مستوى: <span id="lvl-1">1</span></p>
-                <button class="play-btn" onclick="startGame(1)">لعب</button>
-            </div>
-            <!-- لعبة 3 -->
-            <div class="game-card">
-                <div class="info-btn" onclick="showInfo(2)">!</div>
-                <h3>🧠 الذاكرة</h3>
-                <p>مستوى: <span id="lvl-2">1</span></p>
-                <button class="play-btn" onclick="startGame(2)">لعب</button>
-            </div>
-            <!-- لعبة 4 -->
-            <div class="game-card">
-                <div class="info-btn" onclick="showInfo(3)">!</div>
-                <h3>🎲 فك الكود</h3>
-                <p>مستوى: <span id="lvl-3">1</span></p>
-                <button class="play-btn" onclick="startGame(3)">لعب</button>
-            </div>
-            <!-- لعبة 5 -->
-            <div class="game-card">
-                <div class="info-btn" onclick="showInfo(4)">!</div>
-                <h3>🔨 المطرقة</h3>
-                <p>مستوى: <span id="lvl-4">1</span></p>
-                <button class="play-btn" onclick="startGame(4)">لعب</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 3. صفحة الحساب -->
-    <div id="account" class="page">
-        <h2>👤 المتجر السري</h2>
-        <div id="acc-locked" style="text-align:center; padding:30px; background:var(--card); border-radius:10px;">
-            <h3>حساب الـ VIP</h3>
-            <p>السعر: <strong>10,000</strong> عملة</p>
-            <button class="play-btn" style="background:var(--primary); color:black;" onclick="buyAccount()">شراء الحساب</button>
-        </div>
-        <div id="acc-unlocked" class="account-details">
-            <div class="anti-screenshot">CONFIDENTIAL</div>
-            <h3 style="color:var(--secondary)">بيانات الحساب (سري للغاية)</h3>
-            <p>البريد: <strong style="background:#333; color:white; padding:5px;">yoyo@gmail.com</strong></p>
-            <p>كلمة المرور: <strong style="background:#333; color:white; padding:5px;">0595053427Aa</strong></p>
-            <p style="color:red; font-size:12px;">تحذير: لا تحاول التصوير. النظام يحفظ البيانات تلقائياً.</p>
-        </div>
-    </div>
-
-    <!-- 4. صفحة الإعلانات -->
-    <div id="ads" class="page">
-        <h2>📺 شاهد واربح</h2>
-        <div id="ad-timer" style="display:none; text-align:center; background:var(--primary); padding:10px; color:black; margin-bottom:10px;">
-            جاري المشاهدة... <span id="timer-val">0</span> ثانية
-        </div>
-        <div class="ad-item"><span>فيديو قصير (30 ث)</span><button class="watch-btn" onclick="watchAd(30, 25)">+25 💰</button></div>
-        <div class="ad-item"><span>فيديو عادي (35 ث)</span><button class="watch-btn" onclick="watchAd(35, 35)">+35 💰</button></div>
-        <div class="ad-item"><span>فيديو طويل (40 ث)</span><button class="watch-btn" onclick="watchAd(40, 50)">+50 💰</button></div>
-        <div class="ad-item"><span>إعلان ذهبي (50 ث)</span><button class="watch-btn" onclick="watchAd(50, 70)">+70 💰</button></div>
-        <div class="ad-item"><span>ميجا باقة (80 ث)</span><button class="watch-btn" onclick="watchAd(80, 120)">+120 💰</button></div>
-    </div>
-
-    <!-- زر الدعم الفني الظاهر -->
-    <button id="support-float-btn" onclick="openUserChat()">
-        💬 الدعم الفني
-    </button>
-
-    <!-- نافذة الشات (المستخدم) -->
-    <div id="user-chat-modal" class="modal">
-        <div class="modal-box">
-            <h3>💬 تواصل مع الدعم الفني</h3>
-            <div id="user-chat-box" class="chat-container"></div>
-            <div class="chat-input-area">
-                <input type="text" id="user-msg-in" placeholder="اكتب رسالتك...">
-                <button class="watch-btn" onclick="sendUserMsg()">إرسال</button>
-            </div>
-            <br>
-            <button class="nav-btn" style="color:red; width:100%; text-align:center;" onclick="closeModals()">إغلاق</button>
-        </div>
-    </div>
-
-    <!-- نافذة معلومات اللعبة -->
-    <div id="info-modal" class="modal">
-        <div class="modal-box">
-            <h3 id="info-title"></h3>
-            <p id="info-desc"></p>
-            <p>الجائزة: <span id="info-reward" style="color:var(--primary)"></span></p>
-            <button class="watch-btn" onclick="closeModals()">حسناً</button>
-        </div>
-    </div>
-
-    <!-- نافذة اللعب -->
-    <div id="game-modal" class="modal">
-        <div class="modal-box" style="border-color:white;">
-            <div id="game-area"></div>
-            <br>
-            <button class="nav-btn" style="color:red; width:100%; text-align:center;" onclick="closeModals()">استسلام</button>
-        </div>
-    </div>
-
-    <!-- زر الأدمن المخفي -->
-    <button id="hidden-admin-btn" onclick="openAdminLogin()"></button>
-
-    <!-- تسجيل دخول الأدمن -->
-    <div id="admin-login" class="modal">
-        <div class="modal-box" style="background:black; border-color:var(--admin-green);">
-            <h3 style="color:var(--admin-green)">ACCESS SYSTEM</h3>
-            <input type="password" id="adm-pass" class="admin-input" placeholder="Password">
-            <br><br>
-            <button class="watch-btn" style="background:var(--admin-green);" onclick="checkAdmin()">LOGIN</button>
-        </div>
-    </div>
-
-    <!-- لوحة تحكم الأدمن -->
-    <div id="admin-panel-modal" class="modal">
-        <div id="admin-panel" class="modal-box" style="width:95%; max-width:700px; text-align:left;">
-            <h2 style="text-align:center">ADMIN TERMINAL v2.0</h2>
+    <div id="home" class="page active">
+        <div style="text-align:center; margin-top:20px;">
+            <h1 id="site-title-display" style="font-size:3em; color:var(--primary); text-shadow: 2px 2px 0 #000;">YOYO V24</h1>
+            <p id="site-welcome-display" style="color:#ddd">Ultra Edition 🚀</p>
             
-            <label style="color:var(--admin-green)">[INBOX] Active Chats:</label>
-            <div id="inbox-list" class="inbox-list"></div>
+            <!-- أزرار جوجل (جديدة) -->
+            <center>
+                <div id="google-login-container">
+                    <button class="google-btn" onclick="loginGoogle()">
+                        <img src="https://cdn-icons-png.flaticon.com/512/300/300221.png"> تسجيل دخول جوجل
+                    </button>
+                </div>
+                <div id="google-logout-container" style="display:none; margin-bottom:10px;">
+                    <button class="btn-main" style="background:#e74c3c; width:80%;" onclick="logoutGoogle()">تسجيل خروج</button>
+                </div>
+            </center>
 
-            <div style="border:1px dashed var(--admin-green); padding:10px; margin-bottom:10px;">
-                <label style="color:var(--admin-green)">Target ID:</label>
-                <input type="text" id="target-id" class="admin-input" placeholder="Select from list or paste ID">
-                <button onclick="fetchUserData()" style="margin-top:5px; background:var(--admin-green); border:none; padding:5px;">FETCH DATA</button>
+            <button id="btn-daily" class="btn-main" style="background:linear-gradient(45deg, gold, orange); color:black; width:80%; margin-bottom:20px;" onclick="claimDaily()">🎁 المكافأة اليومية</button>
+            <p id="streak-info" style="font-size:12px; color:gold; margin-top:-10px;">أيام متتالية: <span id="streak-count">0</span></p>
+
+            <div class="profile-card">
+                <img id="card-avatar" src="" style="width:80px; height:80px; border-radius:50%; border:3px solid var(--primary); margin-bottom:10px;">
+                <h3 style="color:var(--primary); margin:0;">💳 هويتك</h3>
+                <!-- Bio & XP (جديد) -->
+                <div class="bio-text" id="card-bio">...</div>
+                <div class="xp-container"><div id="card-xp-bar" class="xp-bar"></div></div>
+                <div style="font-size:10px; text-align:right; margin-bottom:10px;">XP: <span id="card-xp-val">0</span>/<span id="card-xp-max">100</span></div>
+
+                <div style="background:#222; padding:10px; border-radius:5px; margin:10px 0; display:flex; justify-content:space-between;">
+                    <strong id="card-id" style="color:white; font-family:monospace;">...</strong>
+                    <button class="copy-btn" onclick="copyMyID()">نسخ</button>
+                </div>
+                <div>💰 الرصيد: <span id="card-coins" style="color:#0f0">...</span></div>
+                <div style="margin-top:5px; color:#ff4757">⭐ المستوى: <span id="card-level">1</span></div>
+                <div id="card-clan" style="margin-top:5px; color:#8e44ad; font-weight:bold;"></div>
+            </div>
+
+            <button class="btn-main" style="width:200px" onclick="nav('games')" id="home-play-btn">ابدأ اللعب</button>
+        </div>
+    </div>
+
+    <!-- 2. الألعاب -->
+    <div id="games" class="page">
+        <h2>🎮 صالة الألعاب</h2>
+        
+        <!-- Dice Game (جديد) -->
+        <div class="game-card" style="border: 1px solid gold; background: linear-gradient(145deg, #332b00, #000);">
+            <h3 style="color:gold;">🎲 لعبة الحظ (الزهر)</h3>
+            <p style="font-size:12px; color:#aaa">راهن وتحدى حظك! (الربح x2)</p>
+            <div style="display:flex; gap:5px; justify-content:center; margin-bottom:10px;">
+                <input type="number" id="dice-bet" placeholder="مبلغ الرهان" style="width:100px; padding:5px; text-align:center;">
+            </div>
+            <button class="btn-main" style="background:gold; color:black;" onclick="rollDice()">ارمي النرد 🎲</button>
+            <div id="dice-result" style="margin-top:10px; font-weight:bold;"></div>
+        </div>
+
+        <!-- Battle Arena -->
+        <div class="game-card" style="border: 2px solid #e74c3c; background: linear-gradient(145deg, #441111, #000);">
+            <h3 style="color:#e74c3c; font-size:1.5em;">🔫 BATTLE ARENA (1v1)</h3>
+            <p style="color:#ddd;">قاتل خصمك في ساحة المعركة!</p>
+            <p style="font-size:12px; color:gray">حرية الحركة، إطلاق نار، استراتيجية</p>
+            <button class="btn-main" style="background:#e74c3c; box-shadow: 0 4px 0 #c0392b;" onclick="openMultiplayerMenu()">🔥 دخول الساحة</button>
+        </div>
+
+        <div class="games-grid">
+            <div class="game-card"> <h3>🔮 التخمين</h3> <button class="btn-main" onclick="playGame(1)">لعب</button> </div>
+            <div class="game-card"> <h3>✊✋ حجرة ورقة</h3> <button class="btn-main" onclick="playGame(2)">لعب</button> </div>
+        </div>
+    </div>
+    
+    <!-- Maintenance MSG -->
+    <div id="maintenance-msg" class="page" style="text-align:center; padding-top:100px;">
+        <h1 style="font-size:50px; color:orange;">🚧</h1>
+        <h2>النظام في وضع الصيانة</h2>
+        <p>يرجى الانتظار، نحن نقوم بتحديثات مهمة.</p>
+    </div>
+
+    <!-- باقي الصفحات -->
+    <div id="leaderboard" class="page">
+        <h2 style="color:gold; text-align:center;">🏆 المتصدرين</h2>
+        <div id="leaderboard-list">Loading...</div>
+        <button class="btn-main" onclick="loadLeaderboard()">🔄 تحديث</button>
+    </div>
+
+    <div id="global-chat" class="page">
+        <h2 style="color:#00d2d3; text-align:center;">🌎 شات العالم</h2>
+        <div id="gchat-area" class="chat-container"></div>
+        <div style="display:flex; gap:5px; margin-top:10px;">
+            <input type="text" id="gchat-input" placeholder="رسالة للجميع..." style="flex:1; padding:10px;">
+            <button class="btn-main" style="width:auto; margin:0;" onclick="sendGlobalChat()">➤</button>
+        </div>
+    </div>
+
+    <div id="bank" class="page">
+        <h2 style="text-align:center;">🏦 البنك المركزي</h2>
+        <div class="room-box">
+            <p>رصيدك: <span id="bank-balance" style="color:#0f0">0</span></p>
+            <input type="text" id="trans-id" placeholder="ID المستلم" style="width:90%; padding:10px; margin-bottom:10px;">
+            <input type="number" id="trans-amount" placeholder="المبلغ" style="width:90%; padding:10px; margin-bottom:10px;">
+            <button class="btn-main" onclick="transferCoins()">إرسال</button>
+        </div>
+        <div style="text-align:center; margin-top:20px;">
+            <strong id="bank-my-id" style="color:var(--primary);">...</strong>
+            <button class="copy-btn" onclick="copyMyID()">نسخ</button>
+        </div>
+    </div>
+
+    <div id="account" class="page">
+        <h2 id="lbl-store">🛒 المتجر</h2>
+        
+        <!-- Promo Code Input -->
+        <div style="background:#222; padding:10px; border-radius:10px; margin-bottom:20px; border:1px solid gold;">
+            <h4 style="margin:0 0 10px 0; color:gold;">🎟️ كود هدية</h4>
+            <div style="display:flex; gap:5px;">
+                <input type="text" id="promo-code-input" placeholder="أدخل الكود هنا" style="flex:1; padding:5px;">
+                <button class="btn-main" style="width:auto; margin:0;" onclick="redeemCode()">استبدال</button>
+            </div>
+        </div>
+
+        <!-- نظام الكلانات -->
+        <div style="background:#2c2c54; padding:10px; border-radius:10px; margin-bottom:20px; border:1px solid #8e44ad;">
+            <h4 style="margin:0 0 10px 0; color:#8e44ad;">🛡️ إنشاء كلان (فريق)</h4>
+            <div style="display:flex; gap:5px;">
+                <input type="text" id="clan-name-input" placeholder="اسم الكلان (3 أحرف)" maxlength="3" style="flex:1; padding:5px;">
+                <button class="btn-main" style="width:auto; margin:0; background:#8e44ad; color:white;" onclick="createClan()">شراء (5000)</button>
+            </div>
+        </div>
+
+        <h3 style="border-bottom:1px solid #333; padding-bottom:5px;">🎨 تمييز الاسم</h3>
+        <div style="display:flex; gap:10px; overflow-x:auto; padding-bottom:10px;">
+            <button class="btn-main" style="color:gold; background:#333" onclick="buyColor('gold')">ذهبي (<span id="price-gold">5000</span>)</button>
+            <button class="btn-main" style="color:red; background:#333" onclick="buyColor('red')">أحمر (<span id="price-red">3000</span>)</button>
+            <button class="btn-main" style="color:#0abde3; background:#333" onclick="buyColor('blue')">سماوي (<span id="price-blue">3000</span>)</button>
+        </div>
+        <div id="acc-lock" style="text-align:center; padding:30px; margin-top:20px; background:var(--card); border-radius:10px;">
+            <p>VIP: <span id="price-vip">10000</span></p><button class="btn-main" onclick="buyAcc()">شراء</button>
+        </div>
+        <div id="acc-open" style="display:none; margin-top:20px; background:black; border:2px dashed red; padding:20px;">
+            <h3>🔓 VIP UNLOCKED</h3><p style="color:#0f0">yoyo@vip.com | Pass: 2025</p>
+        </div>
+    </div>
+
+    <div id="ads" class="page">
+        <h2>📺 كسب العملات</h2>
+        <div id="ad-timer" style="display:none; background:var(--primary); color:black; padding:10px;">انتظر...</div>
+        <button class="btn-main" onclick="watchAd(30,50)">إعلان 1 (+50)</button>
+        <button class="btn-main" onclick="watchAd(60,100)">إعلان 2 (+100)</button>
+    </div>
+
+    <button class="float-btn" onclick="openSupport()">💬</button>
+
+    <!-- نافذة اللعب الجماعي -->
+    <div id="multiplayer-menu-modal" class="modal">
+        <div class="modal-box">
+            <h2 style="color:gold;">🔫 BATTLE ARENA</h2>
+            <div style="display:flex; gap:10px; justify-content:center;">
+                <div style="flex:1; background:#333; padding:10px; border-radius:10px;">
+                    <h4>إنشاء</h4>
+                    <button class="btn-main" onclick="createRoom()">إنشاء</button>
+                </div>
+                <div style="flex:1; background:#333; padding:10px; border-radius:10px;">
+                    <h4>انضمام</h4>
+                    <input type="number" id="room-code-input" placeholder="الكود" style="width:80%; padding:5px;">
+                    <button class="btn-main" style="background:#00d2d3" onclick="joinRoom()">دخول</button>
+                </div>
+            </div>
+            <!-- زر مشاهدة -->
+            <button class="btn-main" style="margin-top:10px; background:#aaa;" onclick="joinRoomSpectate()">👁️ مشاهدة مباراة</button>
+            <br><button class="btn-main" style="background:red" onclick="closeAll()">إغلاق</button>
+        </div>
+    </div>
+
+    <!-- نافذة اللعبة -->
+    <div id="game-canvas-modal" class="modal">
+        <div class="modal-box" style="width:100%; max-width:650px; padding:0; background:transparent; border:none; box-shadow:none;">
+            <div style="background:#222; padding:5px; border-radius:10px 10px 0 0; display:flex; justify-content:space-between; align-items:center;">
+                <span style="color:white; font-weight:bold; margin-right:10px;" id="game-status-display">...</span>
+                <button style="background:red; border:none; color:white; padding:5px 10px; border-radius:5px;" onclick="exitGame()">انسحاب</button>
+            </div>
+            <div id="game-wrapper">
+                <div class="score-board">
+                    <div class="player-stat" style="border-color:#3498db"><span>P1</span><div class="hp-bar-mini"><div id="hp-p1" class="hp-val"></div></div></div>
+                    <div class="player-stat" style="border-color:#e74c3c"><span>P2</span><div class="hp-bar-mini"><div id="hp-p2" class="hp-val"></div></div></div>
+                </div>
+                <canvas id="soccer-canvas" width="600" height="350"></canvas>
                 
-                <div id="admin-data-display" style="display:none; margin-top:10px; color:white;">
-                    <p>Coins: <span id="adm-coins">0</span> | Tasks: <span id="adm-tasks">0</span></p>
-                    <label style="color:var(--admin-green)">Modify Coins:</label>
-                    <input type="number" id="adm-amt" class="admin-input" style="width:100px;">
-                    <button onclick="modCoins(1)" style="background:green; color:white; border:none; padding:5px;">[+]</button>
-                    <button onclick="modCoins(-1)" style="background:red; color:white; border:none; padding:5px;">[-]</button>
-                    <hr style="border-color:#333;">
-                    <label style="color:var(--admin-green)">Chat with User:</label>
-                    <div id="admin-chat-box" class="chat-container" style="height:150px; background:#111;"></div>
-                    <div class="chat-input-area">
-                        <input type="text" id="admin-msg-in" class="admin-input" placeholder="Reply...">
-                        <button onclick="sendAdminMsg()" style="background:var(--admin-green); border:none; padding:5px;">SEND</button>
+                <!-- تحكم Joystick المحسن -->
+                <div class="touch-controls" id="game-controls-ui">
+                    <!-- منطقة الجويستيك -->
+                    <div class="joystick-area" id="joystick-base">
+                        <div class="joystick-knob" id="joystick-knob"></div>
+                    </div>
+                    <!-- زر إطلاق النار -->
+                    <div class="action-btn"><div class="btn-fire" ontouchstart="fireBullet()" onclick="fireBullet()">🔥</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- باقي المودالات -->
+    <div id="user-chat-modal" class="modal"><div class="modal-box" style="height:80vh; display:flex; flex-direction:column;"><h3>💬 الدعم</h3><div id="user-chat-history" class="chat-container"></div><div style="display:flex; gap:5px; margin-top:10px;"><input type="text" id="user-chat-input" style="flex:1;"><button onclick="sendUserMsg()">➤</button></div><button style="margin-top:10px;background:red;color:white;border:none;padding:10px" onclick="closeAll()">إغلاق</button></div></div>
+    
+    <div id="settings-modal" class="modal">
+        <div class="modal-box">
+            <h3>⚙️ الإعدادات</h3>
+            <input id="input-name" placeholder="Name" style="width:90%; padding:10px;">
+            <!-- Bio Input (جديد) -->
+            <input id="input-bio" placeholder="اكتب نبذة عنك (Bio)..." style="width:90%; padding:10px; margin-top:10px;">
+            
+            <button onclick="saveName()" style="margin-top:10px;">حفظ الملف الشخصي</button>
+            <hr>
+            <div id="avatar-selector" class="avatar-grid"></div>
+            <button onclick="closeAll()">X</button>
+        </div>
+    </div>
+    
+    <!-- ************************************ -->
+    <!-- ***** NEW ADMIN SYSTEM UI ***** -->
+    <!-- ************************************ -->
+    
+    <button class="admin-trigger-btn" onclick="document.getElementById('admin-login-modal').style.display='flex'"></button>
+    
+    <div id="admin-login-modal" class="modal">
+        <div class="modal-box" style="background:#111; max-width:300px;">
+            <h3 style="color:red">ADMIN ACCESS</h3>
+            <input type="password" id="adm-pass-input" placeholder="Password" style="width:90%; padding:10px; text-align:center;">
+            <button class="btn-main" onclick="verifyAdmin()" style="margin-top:10px;">LOGIN</button>
+        </div>
+    </div>
+
+    <div id="admin-main-panel" class="modal">
+        <div class="modal-box" style="width:95%; max-width:900px; height:95vh; background:#000; padding:15px; position:relative; overflow:hidden;">
+            
+            <div class="adm-header">
+                <button class="adm-nav-btn active" onclick="switchAdmTab('online')">👥 المتصلين (<span id="adm-online-count">0</span>)</button>
+                <button class="adm-nav-btn" onclick="switchAdmTab('settings')">⚙️ إعدادات</button>
+                <button class="adm-nav-btn" onclick="switchAdmTab('chatmon')">💬 مراقبة الشات</button>
+                <button class="adm-nav-btn" onclick="switchAdmTab('logs')">📜 السجل</button>
+                <button class="adm-nav-btn" onclick="switchAdmTab('codes')">🎟️ أكواد</button>
+                <button class="adm-nav-btn" onclick="switchAdmTab('game')">🎮 اللعبة</button>
+                <button class="adm-nav-btn" onclick="switchAdmTab('shop')">💰 الأسعار</button>
+                <button class="adm-nav-btn" onclick="switchAdmTab('support')">💬 الدعم <span id="global-support-badge" class="global-badge">0</span></button>
+            </div>
+
+            <!-- TAB 1: المتصلين -->
+            <div id="adm-tab-online" class="adm-section active">
+                <!-- وضع الشبح -->
+                <div style="background:#222; padding:10px; margin-bottom:10px; border-radius:5px; text-align:right;">
+                    <label style="color:white; font-weight:bold;">👻 وضع الشبح (Ghost Mode): </label>
+                    <input type="checkbox" id="chk-ghost-mode" onchange="toggleGhostMode()">
+                    <small style="color:#aaa; display:block;">تفعيل هذا الخيار يخفي حالتك (Online) عند إعادة الدخول.</small>
+                </div>
+
+                <div class="online-list-container" id="admin-online-list"></div>
+                <!-- زر التنبيه المنبثق -->
+                <div style="margin-top:10px; border-top:1px solid #333; padding-top:10px;">
+                    <input type="text" id="popup-msg-input" placeholder="رسالة تنبيه للجميع..." style="width:70%; padding:8px;">
+                    <button onclick="sendPopupAlert()" style="background:red; color:white; border:none; padding:8px;">📢 إرسال تنبيه</button>
+                </div>
+            </div>
+
+            <!-- TAB 2: إعدادات الموقع -->
+            <div id="adm-tab-settings" class="adm-section">
+                <div class="settings-grid">
+                    <div class="setting-card"><label class="setting-label">اسم الموقع:</label><input type="text" id="set-site-title" class="custom-input"></div>
+                    <div class="setting-card"><label class="setting-label">ترحيب:</label><input type="text" id="set-welcome-msg" class="custom-input"></div>
+                    <div class="setting-card"><label class="setting-label">اللون (Theme):</label><input type="color" id="set-theme-color" class="color-picker" value="#00d2d3"></div>
+                    <div class="setting-card"><label class="setting-label">المكافأة اليومية:</label><input type="number" id="set-daily-bonus" class="custom-input"></div>
+                    <div class="setting-card" style="grid-column:span 2;"><label class="setting-label">شريط الأخبار:</label><input type="text" id="set-breaking-news" class="custom-input"></div>
+                    <div class="setting-card" style="grid-column:span 2;"><span style="color:red; font-weight:bold;">وضع الصيانة</span> <input type="checkbox" id="set-maintenance"></div>
+                    <button class="save-btn" onclick="saveSiteConfig()">💾 حفظ الإعدادات</button>
+                </div>
+            </div>
+
+            <!-- TAB 3: مراقبة الشات (جديد ومحسن) -->
+            <div id="adm-tab-chatmon" class="adm-section">
+                <!-- أزرار إغلاق/فتح الشات الجديدة -->
+                <div style="display:flex; gap:10px; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #333;">
+                    <button class="btn-main" onclick="lockGlobalChat()" style="background:red; color:white;">🔒 إغلاق الشات للجميع</button>
+                    <button class="btn-main" onclick="unlockGlobalChat()" style="background:green; color:white;">🔓 فتح الشات</button>
+                </div>
+
+                <div id="chat-monitor-area" class="chat-container" style="height:300px; margin-bottom:10px; background:#111;"></div>
+                <button class="btn-main" onclick="clearGlobalChat()" style="background:red;">🗑️ مسح الشات بالكامل</button>
+            </div>
+
+            <!-- TAB 4: سجل التحويلات (جديد) -->
+            <div id="adm-tab-logs" class="adm-section">
+                <div style="height:350px; overflow-y:auto;">
+                    <h4 style="color:var(--primary)">سجل التحويلات</h4>
+                    <table class="adm-table">
+                        <thead><tr><th>من</th><th>إلى</th><th>المبلغ</th><th>الوقت</th></tr></thead>
+                        <tbody id="logs-table-body"></tbody>
+                    </table>
+                    <h4 style="color:red; margin-top:20px;">سجل إجراءات الأدمن</h4>
+                    <ul id="admin-actions-log" style="font-size:12px; color:#aaa; text-align:right;"></ul>
+                </div>
+            </div>
+
+            <!-- TAB 5: الأكواد (جديد) -->
+            <div id="adm-tab-codes" class="adm-section">
+                <div style="display:flex; gap:5px; margin-bottom:10px;">
+                    <input id="new-code-name" placeholder="الكود (مثلاً VIP)" style="flex:1;">
+                    <input id="new-code-val" type="number" placeholder="القيمة" style="width:80px;">
+                    <button onclick="createPromoCode()" style="background:gold; color:black;">➕ إنشاء</button>
+                </div>
+                <div id="codes-list" style="height:300px; overflow-y:auto;"></div>
+            </div>
+
+            <!-- TAB 6: فيزياء اللعبة (جديد) -->
+            <div id="adm-tab-game" class="adm-section">
+                <div class="settings-grid">
+                    <div class="setting-card"><label class="setting-label">سرعة اللاعب:</label><input type="number" id="gm-speed" class="custom-input" value="3"></div>
+                    <div class="setting-card"><label class="setting-label">ضرر الرصاصة:</label><input type="number" id="gm-dmg" class="custom-input" value="10"></div>
+                    <div class="setting-card"><label class="setting-label">نقاط الحياة (HP):</label><input type="number" id="gm-hp" class="custom-input" value="100"></div>
+                    <button class="save-btn" onclick="saveGameConfig()">💾 تحديث اللعبة</button>
+                </div>
+            </div>
+
+            <!-- TAB 7: الأسعار (جديد) -->
+            <div id="adm-tab-shop" class="adm-section">
+                <div class="settings-grid">
+                    <div class="setting-card"><label class="setting-label">سعر الذهبي:</label><input type="number" id="shp-gold" class="custom-input"></div>
+                    <div class="setting-card"><label class="setting-label">سعر الأحمر:</label><input type="number" id="shp-red" class="custom-input"></div>
+                    <div class="setting-card"><label class="setting-label">سعر السماوي:</label><input type="number" id="shp-blue" class="custom-input"></div>
+                    <div class="setting-card"><label class="setting-label">سعر VIP:</label><input type="number" id="shp-vip" class="custom-input"></div>
+                    <button class="save-btn" onclick="saveShopConfig()">💾 تحديث الأسعار</button>
+                </div>
+            </div>
+
+            <!-- TAB 8: الدعم الفني -->
+            <div id="adm-tab-support" class="adm-section">
+                <div class="support-layout">
+                    <div class="support-list" id="support-users-list">Loading...</div>
+                    <div class="support-chat-view">
+                        <div id="adm-chat-header" style="padding:10px; border-bottom:1px solid #333; font-weight:bold;">اختر مستخدم</div>
+                        <div id="adm-chat-box" class="chat-container" style="flex:1; background:#111; height:calc(100% - 80px);"></div>
+                        <div style="display:flex; gap:5px; margin-top:5px;">
+                            <input id="adm-chat-reply" style="flex:1;" placeholder="الرد...">
+                            <button class="btn-main" style="width:50px; margin:0;" onclick="sendAdminReply()">➤</button>
+                        </div>
                     </div>
                 </div>
             </div>
-            <button onclick="closeModals()" style="background:transparent; border:1px solid var(--admin-green); color:var(--admin-green);">LOGOUT</button>
+
+            <button onclick="closeAll()" style="position:absolute; bottom:10px; left:10px; background:red; color:white; padding:10px 30px; border:none; border-radius:5px;">خروج</button>
         </div>
     </div>
 
-    <script>
-        // --- قاعدة البيانات ---
-        let user = {
-            id: localStorage.getItem('yoyo_id') || 'ID-' + Math.floor(100000 + Math.random() * 900000),
-            coins: parseInt(localStorage.getItem('yoyo_coins')) || 0,
-            bought: localStorage.getItem('yoyo_bought') === 'true',
-            levels: JSON.parse(localStorage.getItem('yoyo_levels')) || [1,1,1,1,1],
-            tasks: parseInt(localStorage.getItem('yoyo_tasks')) || 0,
-            chat: JSON.parse(localStorage.getItem('yoyo_chat')) || []
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, push, update, get, onDisconnect, remove, query, orderByChild, limitToLast, off } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+        // --- إضافة Auth Import ---
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCdQfqqUY0aIUtsHQcGrlUdvsN_znvvGYk",
+            authDomain: "yoyogames-efd5b.firebaseapp.com",
+            databaseURL: "https://yoyogames-efd5b-default-rtdb.firebaseio.com",
+            projectId: "yoyogames-efd5b",
+            storageBucket: "yoyogames-efd5b.firebasestorage.app",
+            messagingSenderId: "1056937637926",
+            appId: "1:1056937637926:web:bbbe7648cf4575b144cee7"
         };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const auth = getAuth(app); // Init Auth
 
-        if(!localStorage.getItem('yoyo_id')) localStorage.setItem('yoyo_id', user.id);
+        window.playSound = (id) => { const a=document.getElementById('snd-'+id); if(a){a.currentTime=0; a.play().catch(e=>{});} }
 
-        function saveData() {
-            localStorage.setItem('yoyo_coins', user.coins);
-            localStorage.setItem('yoyo_bought', user.bought);
-            localStorage.setItem('yoyo_levels', JSON.stringify(user.levels));
-            localStorage.setItem('yoyo_tasks', user.tasks);
-            localStorage.setItem('yoyo_chat', JSON.stringify(user.chat));
-            updateUI();
-        }
-
-        function updateUI() {
-            document.getElementById('my-id').innerText = user.id;
-            document.getElementById('my-coins').innerText = user.coins;
-            for(let i=0; i<5; i++) document.getElementById(`lvl-${i}`).innerText = user.levels[i];
+        // --- دالة التنبيه الجديدة (Toast) ---
+        window.showToast = (msg, type='info') => {
+            const container = document.getElementById('toast-container');
+            const div = document.createElement('div');
+            div.className = `toast ${type}`;
+            let icon = 'ℹ️';
+            if(type==='success') icon = '✅';
+            if(type==='error') icon = '❌';
             
-            if(user.bought) {
-                document.getElementById('acc-locked').style.display = 'none';
-                document.getElementById('acc-unlocked').style.display = 'block';
-            }
+            div.innerHTML = `<span>${icon}</span> ${msg}`;
+            container.appendChild(div);
+            playSound('click'); 
+
+            setTimeout(() => {
+                div.style.opacity = '0';
+                setTimeout(() => div.remove(), 300);
+            }, 3000);
         }
 
-        function copyId() { navigator.clipboard.writeText(user.id); alert("تم نسخ ID"); }
+        let myID = localStorage.getItem('yoyo_uid');
+        if(!myID) { myID = 'U-' + Math.floor(100000 + Math.random() * 900000); localStorage.setItem('yoyo_uid', myID); }
+        
+        let myData = { name: "Player", coins: 0, bought: false, avatar: "0", color: "white", lastBonus: 0, streak: 0, level: 1, xp: 0, maxXp: 100, bio: "", mutedUntil: 0, frozen: false, clan: "", usedCodes: {}, banned: false };
+        let currentDailyBonus = 200;
+        let lastChatTime = 0; 
+        let isGhostMode = localStorage.getItem('adm_ghost') === 'true';
+        let myRef = null; // Changed to var for updates
 
-        // --- التنقل ---
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
-        function navTo(pageId) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('show'));
-            document.getElementById(pageId).classList.add('show');
-            document.getElementById('sidebar').classList.remove('active');
-            window.scrollTo(0,0);
-        }
-        function closeModals() {
-            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
-            if(gameTimer) clearInterval(gameTimer);
-        }
+        // Admin State
+        let isAdminLoggedIn = false;
+        let isChatLocked = false;
+        const adminAvatarUrl = "https://cdn-icons-png.flaticon.com/512/2942/2942813.png"; 
 
-        // --- الألعاب ---
-        const gamesData = [
-            {t:"الحساب الذهني", d:"حل المعادلة قبل نفاذ الوقت", r:20},
-            {t:"سرعة البرق", d:"اضغط عندما يتحول اللون للأخضر", r:25},
-            {t:"الذاكرة", d:"احفظ الرقم ثم اكتبه", r:30},
-            {t:"فك الكود", d:"خمن الرقم السري (سنساعدك)", r:35},
-            {t:"المطرقة", d:"اضغط الزر 15 مرة بسرعة", r:40}
+        // Default Configs
+        let shopPrices = { gold: 5000, red: 3000, blue: 3000, vip: 10000 };
+        let gameConfig = { speed: 3, dmg: 10, hp: 100 };
+
+        const avatarList = [
+            "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
+            "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka",
+            "https://api.dicebear.com/7.x/bottts/svg?seed=1",
+            "https://api.dicebear.com/7.x/bottts/svg?seed=2"
         ];
 
-        function showInfo(i) {
-            let l = user.levels[i];
-            document.getElementById('info-title').innerText = gamesData[i].t;
-            document.getElementById('info-desc').innerText = gamesData[i].d;
-            document.getElementById('info-reward').innerText = gamesData[i].r * l;
-            document.getElementById('info-modal').style.display = 'flex';
+        // --- Google Login Logic ---
+        window.loginGoogle = () => {
+            const provider = new GoogleAuthProvider();
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    showToast("تم تسجيل الدخول بنجاح!", "success");
+                    // الصفحه ستحدث البيانات تلقائياً عبر onAuthStateChanged
+                    location.reload(); // لضمان تحديث كل المتغيرات
+                }).catch((error) => {
+                    showToast(error.message, "error");
+                });
         }
 
-        let gameTimer, currGame;
+        window.logoutGoogle = () => {
+            signOut(auth).then(() => {
+                showToast("تم الخروج", "info");
+                location.reload();
+            });
+        }
 
-        function startGame(idx) {
-            currGame = idx;
-            let l = user.levels[idx];
-            let area = document.getElementById('game-area');
-            area.innerHTML = '';
-            document.getElementById('game-modal').style.display = 'flex';
+        // مراقب حالة الدخول
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // مستخدم جوجل
+                myID = user.uid; // استخدام معرف جوجل
+                document.getElementById('google-login-container').style.display = 'none';
+                document.getElementById('google-logout-container').style.display = 'block';
+                connectUser(); // إعادة الاتصال بالمعرف الجديد
+            } else {
+                // مستخدم زائر (Guest)
+                document.getElementById('google-login-container').style.display = 'block';
+                document.getElementById('google-logout-container').style.display = 'none';
+                connectUser(); // الاتصال بمعرف التخزين المحلي
+            }
+        });
 
-            if(idx===0) { // رياضيات
-                let n1=Math.floor(Math.random()*10*l), n2=Math.floor(Math.random()*10*l);
-                area.innerHTML=`<h3>${n1} + ${n2} = ?</h3><input type='number' id='ans' style='padding:10px'><button class='play-btn' onclick='check(${n1+n2})'>تحقق</button>`;
-            } else if(idx===1) { // رد فعل
-                area.innerHTML=`<div id='react-box' style='width:100px;height:100px;background:red;margin:auto;border-radius:50%;display:flex;align-items:center;justify-content:center'>انتظر</div>`;
-                let box=document.getElementById('react-box');
-                let start=0;
-                setTimeout(()=>{
-                    if(document.getElementById('game-modal').style.display=='flex'){
-                        box.style.background='#0f0'; box.innerText='اضغط!'; start=Date.now();
-                        box.onclick=()=>{
-                            if(Date.now()-start < (1000-(l*50))) win(idx); else {alert('بطيء!'); closeModals();}
-                        }
+        // Connection & Ghost Mode Logic
+        onValue(ref(db, ".info/connected"), (s) => { 
+            if(s.val()) { 
+                document.getElementById('loading-screen').style.opacity = '0';
+                setTimeout(()=> document.getElementById('loading-screen').style.display='none', 500);
+
+                if(!isGhostMode) {
+                    set(ref(db,"onlineUsers/"+myID), { time: Date.now() }); 
+                    onDisconnect(ref(db,"onlineUsers/"+myID)).remove(); 
+                }
+            } 
+        });
+
+        // SITE CONFIG LISTENER
+        onValue(ref(db, 'siteConfig'), (snap) => {
+            const config = snap.val();
+            if(config) {
+                if(config.title) document.getElementById('site-title-display').innerText = config.title;
+                if(config.welcomeMsg) document.getElementById('site-welcome-display').innerText = config.welcomeMsg;
+                if(config.themeColor) document.documentElement.style.setProperty('--primary', config.themeColor);
+                if(config.dailyBonus) currentDailyBonus = parseInt(config.dailyBonus);
+                
+                if(config.chatLocked !== undefined) isChatLocked = config.chatLocked;
+
+                const newsBar = document.getElementById('breaking-news-bar');
+                if(config.breakingNews && config.breakingNews.trim() !== "") { newsBar.style.display = 'block'; document.getElementById('breaking-text').innerText = config.breakingNews; } else newsBar.style.display = 'none';
+
+                if(config.maintenance === true) { document.getElementById('games').style.display = 'none'; document.getElementById('maintenance-msg').style.display = 'block'; document.getElementById('nav-games-btn').style.display = 'none'; document.getElementById('home-play-btn').style.display = 'none'; closeAll(); } 
+                else { document.getElementById('maintenance-msg').style.display = 'none'; document.getElementById('nav-games-btn').style.display = 'block'; document.getElementById('home-play-btn').style.display = 'inline-block'; }
+
+                if(config.game) gameConfig = config.game;
+                
+                if(config.shop) {
+                    shopPrices = config.shop;
+                    document.getElementById('price-gold').innerText = shopPrices.gold;
+                    document.getElementById('price-red').innerText = shopPrices.red;
+                    document.getElementById('price-blue').innerText = shopPrices.blue;
+                    document.getElementById('price-vip').innerText = shopPrices.vip;
+                }
+
+                if(config.popupAlert && config.popupAlert.time > (myData.lastPopupSeen || 0)) {
+                    document.getElementById('global-alert-text').innerText = config.popupAlert.msg;
+                    document.getElementById('global-alert-modal').style.display = 'flex';
+                    myData.lastPopupSeen = config.popupAlert.time; 
+                    saveToServer(); 
+                }
+            }
+        });
+
+        // تم تغليف الاتصال بدالة ليعمل مع جوجل
+        function connectUser() {
+            if(myRef) off(myRef); // إيقاف الاستماع القديم إذا وجد
+            myRef = ref(db, 'users/' + myID);
+            
+            // تحديث حالة الأونلاين بالمعرف الجديد
+            if(!isGhostMode) {
+                set(ref(db,"onlineUsers/"+myID), { time: Date.now() }); 
+                onDisconnect(ref(db,"onlineUsers/"+myID)).remove(); 
+            }
+
+            onValue(myRef, (snapshot) => {
+                const data = snapshot.val();
+                if(data) {
+                    myData = { ...myData, ...data };
+                    // Ensure new fields exist
+                    if(!myData.xp) myData.xp = 0;
+                    if(!myData.maxXp) myData.maxXp = 100;
+                    if(!myData.bio) myData.bio = "";
+                    
+                    updateUI();
+                    
+                    if(myData.banned === true) {
+                        document.getElementById('banned-screen').style.display = 'flex';
+                        return;
+                    } else {
+                        document.getElementById('banned-screen').style.display = 'none';
                     }
-                }, 1000+Math.random()*2000);
-            } else if(idx===2) { // ذاكرة
-                let n=Math.floor(Math.random()*Math.pow(10,l+2));
-                area.innerHTML=`<h3>احفظ: ${n}</h3>`;
-                setTimeout(()=>{ area.innerHTML=`<input type='number' id='ans'><button class='play-btn' onclick='check(${n})'>تحقق</button>`; },2000);
-            } else if(idx===3) { // تخمين
-                let t=Math.floor(Math.random()*(10*l))+1;
-                area.innerHTML=`<h3>خمن (1-${10*l})</h3><input type='number' id='ans'><button class='play-btn' onclick='guess(${t})'>خمن</button><p id='hint'></p>`;
-            } else if(idx===4) { // نقر
-                let c=0, req=15+(l*3);
-                area.innerHTML=`<h3>اضغط ${req} مرات</h3><button id='c-btn' style='font-size:30px;padding:10px;border-radius:50%'>0</button>`;
-                document.getElementById('c-btn').onclick=function(){ c++; this.innerText=c; if(c>=req) win(idx); };
+
+                    if(data.alert) { showToast(data.alert, "info"); update(myRef, {alert: null}); }
+                    if(data.kick) { alert("⛔ لقد تم طردك"); update(myRef, {kick:null}); window.location.reload(); }
+                    
+                    if(data.messages) {
+                    if(document.getElementById('user-chat-modal').style.display === 'flex') renderChat(document.getElementById('user-chat-history'), data.messages);
+                    }
+                } else update(myRef, myData);
+            });
+        }
+
+        // Chat
+        const gChatRef = ref(db, 'globalChat');
+        onValue(query(gChatRef, limitToLast(50)), (snap) => {
+            const div = document.getElementById('gchat-area'); div.innerHTML = '';
+            snap.forEach(child => {
+                const m = child.val();
+                const d = document.createElement('div');
+                const isMe = m.senderID === myID;
+                d.className = `msg-bubble ${isMe ? 'chat-mine' : 'chat-other'}`;
+                
+                let nameClass = "";
+                if(m.color === 'gold') nameClass = "name-gold";
+                else if(m.color === 'red') nameClass = "name-red";
+                else if(m.color === 'blue') nameClass = "name-blue";
+                
+                let badgeHTML = "";
+                if(m.isAdmin) badgeHTML += `<span class="admin-badge">ADMIN</span>`;
+                else if(m.vip) badgeHTML += `<span class="vip-badge">VIP</span>`;
+                if(m.clan) badgeHTML += `<span class="clan-badge">${m.clan}</span>`; 
+
+                d.innerHTML = `<div style="font-size:10px; opacity:0.7;">
+                    <img src="${m.avatar}" style="width:15px; height:15px; border-radius:50%; vertical-align:middle; border:1px solid #777;"> 
+                    ${badgeHTML} <span class="${nameClass}">${m.name}</span>
+                </div>${m.text}`;
+                div.appendChild(d);
+            });
+            div.scrollTop = div.scrollHeight;
+        });
+
+        function updateUI() {
+            const avUrl = avatarList[parseInt(myData.avatar) || 0] || avatarList[0];
+            document.getElementById('header-avatar').src = avUrl;
+            document.getElementById('user-display').innerText = `${myData.name} | 💰${myData.coins}`;
+            document.getElementById('card-avatar').src = avUrl;
+            document.getElementById('card-id').innerText = myID;
+            document.getElementById('card-coins').innerText = myData.coins;
+            document.getElementById('card-level').innerText = myData.level;
+            
+            // Bio & XP Update
+            document.getElementById('card-bio').innerText = myData.bio || "لا توجد نبذة...";
+            document.getElementById('card-xp-val').innerText = myData.xp;
+            document.getElementById('card-xp-max').innerText = myData.maxXp;
+            const xpPercent = Math.min((myData.xp / myData.maxXp) * 100, 100);
+            document.getElementById('card-xp-bar').style.width = xpPercent + "%";
+
+            // Clan Display
+            const clanDiv = document.getElementById('card-clan');
+            if(myData.clan) clanDiv.innerText = `🛡️ Clan: [${myData.clan}]`;
+            else clanDiv.innerText = "";
+
+            document.getElementById('bank-balance').innerText = myData.coins;
+            document.getElementById('bank-my-id').innerText = myID;
+            if(myData.bought) { document.getElementById('acc-lock').style.display = 'none'; document.getElementById('acc-open').style.display = 'block'; }
+            
+            document.getElementById('streak-count').innerText = myData.streak || 0;
+            
+            checkDailyBtn();
+        }
+        window.saveToServer = () => update(myRef, { name: myData.name, coins: myData.coins, bought: myData.bought, avatar: myData.avatar, color: myData.color, lastBonus: myData.lastBonus, streak: myData.streak, level: myData.level, xp: myData.xp, maxXp: myData.maxXp, bio: myData.bio, clan: myData.clan || "" });
+
+        const avGrid = document.getElementById('avatar-selector'); avGrid.innerHTML = '';
+        avatarList.forEach((url, idx) => {
+            const img = document.createElement('img'); img.src = url; img.className = 'avatar-option';
+            img.onclick = () => { myData.avatar = idx.toString(); saveToServer(); showToast("تم تغيير الأفاتار!", "success"); };
+            avGrid.appendChild(img);
+        });
+
+        // --- نظام الـ XP (جديد) ---
+        function addXP(amount) {
+            myData.xp += amount;
+            if(myData.xp >= myData.maxXp) {
+                myData.xp -= myData.maxXp;
+                myData.level++;
+                myData.maxXp = Math.floor(myData.maxXp * 1.2); // أصعب كل مرة
+                showToast(`🆙 مبروك! وصلت للمستوى ${myData.level}`, 'success');
+                playSound('win');
+            }
+            saveToServer();
+        }
+
+        window.claimDaily = () => {
+            if(myData.frozen) return showToast("❄️ حسابك مجمد", "error");
+            const now = Date.now();
+            const last = myData.lastBonus || 0;
+            const diff = now - last;
+            
+            if(diff >= 86400000) { 
+                if(diff < 172800000) { 
+                    myData.streak = (myData.streak || 0) + 1;
+                } else {
+                    myData.streak = 1; 
+                }
+                
+                let bonus = currentDailyBonus + (myData.streak * 10); 
+                if(bonus > 500) bonus = 500; 
+
+                myData.coins += bonus; 
+                myData.lastBonus = now; 
+                addXP(50); // XP bonus
+                saveToServer(); 
+                playSound('win'); 
+                showToast(`🎁 +${bonus} عملة! (Streak: ${myData.streak})`, "success");
+            } else showToast("⏳ عد لاحقاً", "info");
+        }
+        function checkDailyBtn() { const btn = document.getElementById('btn-daily'); if(Date.now() - (myData.lastBonus||0) >= 86400000) btn.style.filter = "brightness(1.2)"; else btn.style.filter = "grayscale(1)"; }
+
+        window.copyMyID = () => navigator.clipboard.writeText(myID).then(()=>showToast("تم النسخ", "success")).catch(()=>prompt("النسخ:",myID));
+        
+        // Transfer
+        window.transferCoins = () => {
+            if(myData.frozen) return showToast("❄️ حسابك مجمد لا يمكنك التحويل", "error");
+            const tid=document.getElementById('trans-id').value.trim(), amt=parseInt(document.getElementById('trans-amount').value);
+            if(!tid||!amt) return showToast("بيانات خاطئة", "error"); 
+            if(myData.coins<amt) return showToast("رصيد غير كافي", "error");
+            get(ref(db,'users/'+tid)).then(s=>{
+                if(s.exists()){ 
+                    myData.coins-=amt; saveToServer(); 
+                    update(ref(db,'users/'+tid), { coins:(s.val().coins||0)+amt, alert:`💸 وصلك ${amt} من ${myData.name}` }); 
+                    push(ref(db, 'logs/transactions'), { from: myData.name, to: s.val().name, amount: amt, time: Date.now() });
+                    showToast("تم التحويل بنجاح!", "success"); 
+                } else showToast("ID المستخدم غير موجود", "error");
+            });
+        }
+        
+        window.loadLeaderboard = () => {
+            document.getElementById('leaderboard-list').innerHTML = 'جاري التحميل...';
+            get(query(ref(db, 'users'), orderByChild('coins'))).then(snap => {
+                let users = []; snap.forEach(c => users.push(c.val()));
+                users.sort((a,b) => b.coins - a.coins);
+                const list = document.getElementById('leaderboard-list'); list.innerHTML = '';
+                users.slice(0, 5).forEach((u, i) => {
+                    const div = document.createElement('div'); div.className = 'leader-item';
+                    div.innerHTML = `<div style="display:flex; align-items:center; gap:10px;"><div class="rank-badge">${i+1}</div><span>${u.name}</span></div><span style="color:#0f0;">${u.coins}</span>`;
+                    list.appendChild(div);
+                });
+            });
+        }
+
+        window.buyColor = (colName) => { 
+            let price = shopPrices[colName];
+            if(!price) return showToast("خطأ في السعر", "error");
+            if(myData.coins >= price) { 
+                if(confirm(`شراء اللون بـ ${price} جوهرة؟`)) { 
+                    myData.coins -= price; myData.color = colName; saveToServer(); showToast("تم تفعيل اللون بنجاح!", "success"); 
+                } 
+            } else { showToast("رصيدك غير كافي!", "error"); }
+        }
+
+        window.createClan = () => {
+            const name = document.getElementById('clan-name-input').value.toUpperCase();
+            if(!name || name.length !== 3) return showToast("الاسم يجب أن يكون 3 أحرف", "error");
+            const price = 5000;
+            if(myData.coins < price) return showToast("تحتاج 5000 عملة", "error");
+            if(myData.clan) return showToast("أنت بالفعل في كلان", "error");
+
+            if(confirm(`إنشاء كلان [${name}] بـ 5000؟`)) {
+                myData.coins -= price;
+                myData.clan = name;
+                saveToServer();
+                showToast("تم إنشاء الكلان!", "success");
             }
         }
+        
+        // Chat with XP
+        window.sendGlobalChat = () => { 
+            if(myData.frozen) return showToast("❄️ حسابك مجمد", "error");
+            if(isChatLocked && !isAdminLoggedIn) {
+                showToast("⛔ الشات مغلق مؤقتاً", "error");
+                return;
+            }
+            if(myData.mutedUntil && Date.now() < myData.mutedUntil) return showToast("🔇 أنت مكتوم مؤقتاً", "error");
+            
+            if(Date.now() - lastChatTime < 2000) return showToast("⏳ تمهل قليلاً", "info");
+            lastChatTime = Date.now();
 
-        function check(v) { if(parseInt(document.getElementById('ans').value)===v) win(currGame); else {alert('خطأ'); closeModals();} }
-        function guess(t) { 
-            let v=parseInt(document.getElementById('ans').value); 
-            let h=document.getElementById('hint');
-            if(v===t) win(currGame); else h.innerText = v<t ? "أكبر ⬆️" : "أصغر ⬇️";
+            const t = document.getElementById('gchat-input').value; if(!t) return; 
+            
+            // Add slight XP for chatting
+            addXP(2); 
+
+            let currentAvatar = isAdminLoggedIn ? adminAvatarUrl : avatarList[myData.avatar||0];
+            push(gChatRef, { senderID: myID, name: myData.name, avatar: currentAvatar, color: myData.color || 'white', text: t, vip: myData.bought, isAdmin: isAdminLoggedIn, clan: myData.clan || "" }); 
+            document.getElementById('gchat-input').value = ''; 
         }
+        
+        window.sendUserMsg = () => { let t = document.getElementById('user-chat-input').value; if(!t) return; push(ref(db,'users/'+myID+'/messages'), { sender: 'user', text: t, timestamp: Date.now() }); document.getElementById('user-chat-input').value = ''; showToast("تم الإرسال", "success"); }
+        
+        window.playGame = (i) => { showToast("قريباً", "info"); }
 
-        function win(idx) {
-            let r = gamesData[idx].r * user.levels[idx];
-            user.coins += r; user.levels[idx]++; user.tasks++;
-            saveData(); alert(`مبروك! ربحت ${r}`); closeModals();
-        }
+        // --- Dice Game Logic (جديد) ---
+        window.rollDice = () => {
+            const betInput = document.getElementById('dice-bet');
+            const bet = parseInt(betInput.value);
+            const resDiv = document.getElementById('dice-result');
 
-        // --- الإعلانات ---
-        let watching = false;
-        function watchAd(sec, rew) {
-            if(watching) { alert('انتظر انتهاء الإعلان'); return; }
-            watching = true;
-            let btns = document.querySelectorAll('.watch-btn'); btns.forEach(b=>b.disabled=true);
-            let d = document.getElementById('ad-timer'), v = document.getElementById('timer-val');
-            d.style.display='block'; v.innerText=sec;
-            let i = setInterval(()=>{
-                sec--; v.innerText=sec;
-                if(sec<=0) {
-                    clearInterval(i); watching=false;
-                    user.coins+=rew; user.tasks++; saveData();
-                    d.style.display='none'; btns.forEach(b=>b.disabled=false);
-                    alert(`حصلت على ${rew}`);
+            if(!bet || bet <= 0) return showToast("أدخل مبلغ رهان صحيح", "error");
+            if(myData.coins < bet) return showToast("رصيدك غير كافي!", "error");
+
+            resDiv.innerText = "🎲 جاري الرمي...";
+            
+            setTimeout(() => {
+                const userRoll = Math.floor(Math.random() * 6) + 1;
+                const botRoll = Math.floor(Math.random() * 6) + 1;
+
+                if(userRoll > botRoll) {
+                    myData.coins += bet;
+                    addXP(10);
+                    saveToServer();
+                    playSound('win');
+                    resDiv.innerHTML = `<span style="color:#2ecc71">فزت! (أنت: ${userRoll} | هو: ${botRoll}) +${bet}</span>`;
+                    showToast(`مبروك! ربحت ${bet} عملة`, "success");
+                } else if (userRoll < botRoll) {
+                    myData.coins -= bet;
+                    saveToServer();
+                    resDiv.innerHTML = `<span style="color:#e74c3c">خسرت! (أنت: ${userRoll} | هو: ${botRoll}) -${bet}</span>`;
+                    showToast(`حظ أوفر! خسرت ${bet}`, "error");
+                } else {
+                    resDiv.innerHTML = `<span style="color:gray">تعادل! (استعدت مالك)</span>`;
+                    showToast("تعادل!", "info");
                 }
             }, 1000);
         }
-
-        // --- الحساب ---
-        function buyAccount() {
-            if(user.coins>=10000) {
-                if(confirm('شراء بـ 10000؟')) { user.coins-=10000; user.bought=true; saveData(); }
-            } else alert('رصيد غير كافي');
-        }
-
-        // --- الشات (المستخدم) ---
-        function openUserChat() {
-            document.getElementById('user-chat-modal').style.display = 'flex';
-            renderChat('user-chat-box', user.chat);
-        }
-        function sendUserMsg() {
-            let txt = document.getElementById('user-msg-in').value;
-            if(!txt) return;
-            user.chat.push({sender:'user', text:txt});
-            saveData();
-            document.getElementById('user-msg-in').value = '';
-            renderChat('user-chat-box', user.chat);
-        }
-
-        // --- الأدمن ---
-        function openAdminLogin() { document.getElementById('admin-login').style.display = 'flex'; }
         
-        function checkAdmin() {
-            if(document.getElementById('adm-pass').value === 'yoyo020118') {
-                closeModals();
-                document.getElementById('admin-panel-modal').style.display = 'flex';
-                document.getElementById('adm-pass').value='';
-                document.getElementById('admin-data-display').style.display='none';
-                loadInbox(); 
-            } else alert('Access Denied');
-        }
-
-        function loadInbox() {
-            let list = document.getElementById('inbox-list');
-            list.innerHTML = '';
-            // محاكاة: إظهار المستخدم الحالي
-            if(user.chat.length > 0) {
-                let item = document.createElement('div');
-                item.className = 'inbox-item';
-                item.innerHTML = `<span>User: ${user.id}</span> <span>(Active)</span>`;
-                item.onclick = function() {
-                    document.getElementById('target-id').value = user.id;
-                    fetchUserData();
-                };
-                list.appendChild(item);
-            } else {
-                list.innerHTML = '<div style="padding:5px; color:gray;">No active messages</div>';
-            }
-        }
-
-        function fetchUserData() {
-            let tid = document.getElementById('target-id').value.trim();
-            if(tid === user.id) {
-                document.getElementById('admin-data-display').style.display = 'block';
-                document.getElementById('adm-coins').innerText = user.coins;
-                document.getElementById('adm-tasks').innerText = user.tasks;
-                renderChat('admin-chat-box', user.chat);
-            } else {
-                alert('User not found (Try your own ID).');
-            }
-        }
-
-        function modCoins(dir) {
-            let amt = parseInt(document.getElementById('adm-amt').value);
-            if(amt) {
-                user.coins += (amt*dir); if(user.coins<0) user.coins=0;
-                saveData();
-                document.getElementById('adm-coins').innerText = user.coins;
-                alert('Updated');
-            }
-        }
-
-        function sendAdminMsg() {
-            let txt = document.getElementById('admin-msg-in').value;
-            if(!txt) return;
-            user.chat.push({sender:'admin', text:txt});
-            saveData();
-            document.getElementById('admin-msg-in').value='';
-            renderChat('admin-chat-box', user.chat);
-        }
-
-        function renderChat(elId, chatData) {
-            let box = document.getElementById(elId);
-            box.innerHTML = '';
-            chatData.forEach(msg => {
-                let d = document.createElement('div');
-                d.className = `msg ${msg.sender}`;
-                d.innerText = msg.text;
-                box.appendChild(d);
+        window.redeemCode = () => {
+            const code = document.getElementById('promo-code-input').value.trim();
+            if(!code) return;
+            if(myData.usedCodes && myData.usedCodes[code]) { return showToast("⛔ لقد استخدمت هذا الكود سابقاً!", "error"); }
+            get(ref(db, 'promoCodes/'+code)).then(snap => {
+                if(snap.exists()) {
+                    get(ref(db, 'users/'+myID+'/usedCodes/'+code)).then(usedSnap => {
+                        if(usedSnap.exists()) { showToast("⛔ لقد استخدمت هذا الكود سابقاً!", "error"); } else {
+                            const val = snap.val(); myData.coins += parseInt(val.value); update(ref(db, 'users/'+myID+'/usedCodes'), { [code]: true }); saveToServer(); showToast(`🎉 مبروك! ربحت ${val.value} عملة`, "success");
+                        }
+                    });
+                } else showToast("كود خاطئ", "error");
             });
-            box.scrollTop = box.scrollHeight;
         }
 
-        updateUI();
+        /* =======================================================
+           ENGINE V24: BATTLE ARENA
+           ======================================================= */
+        const canvas = document.getElementById('soccer-canvas');
+        const ctx = canvas.getContext('2d');
+        const WIDTH = 600, HEIGHT = 350;
+        let currentRoomId = null, myRole = null, gameInterval = null;
+        let lastNetUpdate = 0;
+        let joystick = { active: false, dx: 0, dy: 0 };
+        const p1 = { x: 50, y: 175, hp: 100, color: '#3498db', avatar: 0, lastShot: 0 };
+        const p2 = { x: 550, y: 175, hp: 100, color: '#e74c3c', avatar: 0, lastShot: 0 };
+        let bullets = []; 
+        let powerups = []; 
+        const obstacles = [{x: 200, y: 100, w: 40, h: 150},{x: 360, y: 100, w: 40, h: 150}];
+        const avatarImgs = [];
+        avatarList.forEach(src => { const i = new Image(); i.src=src; avatarImgs.push(i); });
 
+        window.openMultiplayerMenu = () => document.getElementById('multiplayer-menu-modal').style.display = 'flex';
+        
+        window.createRoom = () => {
+            if(myData.frozen) return showToast("❄️ مجمد", "error");
+            const code = Math.floor(1000 + Math.random() * 9000); currentRoomId = code; myRole = 'p1';
+            set(ref(db, 'arena/' + code), { p1: { x:50, y:175, hp: gameConfig.hp, avatar: myData.avatar, shoot: 0 }, p2: { x:550, y:175, hp: gameConfig.hp, avatar: "0", shoot: 0 }, powerups: [] });
+            onDisconnect(ref(db, 'arena/' + code)).remove();
+            startArenaGame(code);
+        };
+        
+        window.joinRoom = () => {
+            if(myData.frozen) return showToast("❄️ مجمد", "error");
+            const code = document.getElementById('room-code-input').value;
+            get(ref(db, 'arena/' + code)).then(snap => {
+                if(snap.exists()) { currentRoomId = code; myRole = 'p2'; update(ref(db, `arena/${code}/p2`), { avatar: myData.avatar }); startArenaGame(code); } else showToast("الغرفة غير موجودة", "error");
+            });
+        };
+
+        window.joinRoomSpectate = () => {
+            const code = document.getElementById('room-code-input').value;
+            get(ref(db, 'arena/' + code)).then(snap => {
+                if(snap.exists()) { 
+                    currentRoomId = code; 
+                    myRole = 'spectator'; 
+                    startArenaGame(code); 
+                    showToast("وضع المشاهدة 👀", "info");
+                } else showToast("الغرفة غير موجودة", "error");
+            });
+        };
+
+        function startArenaGame(code) {
+            closeAll(); document.getElementById('game-canvas-modal').style.display = 'flex'; document.getElementById('game-status-display').innerText = `غرفة: ${code}`;
+            p1.x=50; p1.y=175; p1.hp=gameConfig.hp; p2.x=550; p2.y=175; p2.hp=gameConfig.hp; bullets=[]; powerups=[];
+            if(myRole === 'spectator') document.getElementById('game-controls-ui').style.display = 'none';
+            else document.getElementById('game-controls-ui').style.display = 'flex';
+            gameInterval = setInterval(() => { updateArenaPhysics(); drawArenaGame(); syncNetwork(); }, 1000/60);
+            onValue(ref(db, `arena/${code}`), (snap) => {
+                const val = snap.val(); if(!val) return;
+                if(myRole !== 'p1') { p1.targetX = val.p1.x; p1.targetY = val.p1.y; p1.hp = val.p1.hp; p1.avatar = val.p1.avatar; if(val.p1.shoot > p1.lastShot) { spawnBullet('p1'); p1.lastShot = val.p1.shoot; } } 
+                if (myRole !== 'p2') { p2.targetX = val.p2.x; p2.targetY = val.p2.y; p2.hp = val.p2.hp; p2.avatar = val.p2.avatar; if(val.p2.shoot > p2.lastShot) { spawnBullet('p2'); p2.lastShot = val.p2.shoot; } }
+                if(val.powerups) powerups = val.powerups; else powerups = [];
+                const max = gameConfig.hp;
+                document.getElementById('hp-p1').style.width = (p1.hp/max)*100 + '%'; document.getElementById('hp-p2').style.width = (p2.hp/max)*100 + '%';
+                if(p1.hp <= 0 || p2.hp <= 0) endGame();
+            });
+            initJoystick(); 
+        }
+        
+        window.fireBullet = () => { 
+            if(myRole === 'spectator') return;
+            const now = Date.now(); const me = myRole === 'p1' ? p1 : p2; 
+            if(now - me.lastShot > 400) { spawnBullet(myRole); me.lastShot = now; update(ref(db, `arena/${currentRoomId}/${myRole}/shoot`), now); } 
+        }
+        function spawnBullet(role) { playSound('shot'); const shooter = role==='p1'?p1:p2; const dir = role==='p1'?1:-1; bullets.push({ x: shooter.x + (20*dir), y: shooter.y, vx: 10*dir, vy: 0, owner: role }); }
+        
+        function checkSpawnPowerup() {
+            if(myRole === 'p1' && Math.random() < 0.005 && powerups.length < 2) {
+                const type = Math.random() > 0.5 ? 1 : 2; 
+                const newPu = { x: 200 + Math.random()*200, y: 50 + Math.random()*250, type: type, id: Date.now() };
+                powerups.push(newPu);
+                update(ref(db, `arena/${currentRoomId}/powerups`), powerups);
+            }
+        }
+
+        function updateArenaPhysics() {
+            checkSpawnPowerup();
+            const me = myRole === 'p1' ? p1 : p2; 
+            if(myRole !== 'spectator') {
+                const speed = parseInt(gameConfig.speed); 
+                let dx = 0, dy = 0; 
+                if(joystick.active) { dx = joystick.dx * speed; dy = joystick.dy * speed; }
+                if(me.x + dx > 10 && me.x + dx < WIDTH - 10) me.x += dx; 
+                if(me.y + dy > 10 && me.y + dy < HEIGHT - 10) me.y += dy;
+                obstacles.forEach(o => { if(me.x > o.x - 10 && me.x < o.x + o.w + 10 && me.y > o.y - 10 && me.y < o.y + o.h + 10) { me.x -= dx; me.y -= dy; } });
+                powerups.forEach((pu, idx) => {
+                    const dist = Math.sqrt((me.x - pu.x)**2 + (me.y - pu.y)**2);
+                    if(dist < 20) {
+                        playSound('win'); 
+                        if(pu.type === 1) me.hp = Math.min(me.hp + 20, parseInt(gameConfig.hp));
+                        powerups.splice(idx, 1);
+                        if(myRole === 'p1') update(ref(db, `arena/${currentRoomId}/p1/hp`), me.hp);
+                        else update(ref(db, `arena/${currentRoomId}/p2/hp`), me.hp);
+                        update(ref(db, `arena/${currentRoomId}/powerups`), powerups);
+                    }
+                });
+            }
+            const opp = myRole === 'p1' ? p2 : p1; if(opp.targetX !== undefined) { opp.x += (opp.targetX - opp.x) * 0.2; opp.y += (opp.targetY - opp.y) * 0.2; }
+            const p1Obj = myRole === 'p1' ? p1 : p2;
+            if(myRole === 'spectator' && p1.targetX !== undefined) { p1.x += (p1.targetX - p1.x) * 0.2; p1.y += (p1.targetY - p1.y) * 0.2; }
+            for(let i = bullets.length - 1; i >= 0; i--) { let b = bullets[i]; b.x += b.vx; b.y += b.vy; const target = b.owner === 'p1' ? p2 : p1; const dist = Math.sqrt((b.x - target.x)**2 + (b.y - target.y)**2); if(dist < 20) { playSound('hit'); bullets.splice(i, 1); if(myRole === 'p1' && b.owner === 'p1') { target.hp -= parseInt(gameConfig.dmg); update(ref(db, `arena/${currentRoomId}/p2/hp`), target.hp); } else if (myRole === 'p2' && b.owner === 'p2') { target.hp -= parseInt(gameConfig.dmg); update(ref(db, `arena/${currentRoomId}/p1/hp`), target.hp); } continue; } if(b.x < 0 || b.x > WIDTH) { bullets.splice(i, 1); continue; } let hitObs = false; obstacles.forEach(o => { if(b.x > o.x && b.x < o.x + o.w && b.y > o.y && b.y < o.y + o.h) hitObs=true; }); if(hitObs) bullets.splice(i, 1); }
+        }
+        
+        function drawArenaGame() { 
+            ctx.clearRect(0,0, WIDTH, HEIGHT); 
+            ctx.fillStyle = "#5d4037"; obstacles.forEach(o => { ctx.fillRect(o.x, o.y, o.w, o.h); ctx.strokeStyle="#3e2723"; ctx.lineWidth=2; ctx.strokeRect(o.x,o.y,o.w,o.h); }); 
+            ctx.fillStyle = "#ffff00"; bullets.forEach(b => { ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI*2); ctx.fill(); }); 
+            powerups.forEach(p => { ctx.fillStyle = p.type === 1 ? '#0f0' : '#ff0'; ctx.fillRect(p.x-10, p.y-10, 20, 20); ctx.strokeStyle='white'; ctx.strokeRect(p.x-10, p.y-10, 20, 20); ctx.fillStyle='black'; ctx.font='10px Arial'; ctx.fillText(p.type===1?"HP":"SP", p.x-7, p.y+4); });
+            drawSoldier(p1); drawSoldier(p2); 
+        }
+        function drawSoldier(p) { ctx.save(); ctx.translate(p.x, p.y); ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = "white"; ctx.lineWidth = 2; ctx.stroke(); const img = avatarImgs[parseInt(p.avatar)||0]; if(img && img.complete) { ctx.beginPath(); ctx.arc(0,0,15,0,Math.PI*2); ctx.clip(); ctx.drawImage(img, -15,-15,30,30); } ctx.restore(); }
+        
+        function syncNetwork() { 
+            if(myRole === 'spectator') return;
+            const now = Date.now(); if(now - lastNetUpdate > 50) { const myObj = myRole === 'p1' ? p1 : p2; update(ref(db, `arena/${currentRoomId}/${myRole}`), { x: Math.round(myObj.x), y: Math.round(myObj.y) }); lastNetUpdate = now; } 
+        }
+        function endGame() { clearInterval(gameInterval); let msg = ""; if(p1.hp <= 0 && p2.hp <= 0) msg = "تعادل!"; else if(p1.hp <= 0) msg = "P2 فاز!"; else msg = "P1 فاز!"; playSound('win'); showToast(msg, "info"); exitGame(); addXP(100); }
+        window.exitGame = () => { clearInterval(gameInterval); document.getElementById('game-canvas-modal').style.display = 'none'; if(myRole === 'p1' && currentRoomId) remove(ref(db, 'arena/' + currentRoomId)); currentRoomId = null; };
+        
+        function initJoystick() {
+            const base = document.getElementById('joystick-base');
+            const knob = document.getElementById('joystick-knob');
+            base.addEventListener('touchstart', (e) => { e.preventDefault(); joystick.active = true; handleJoystickMove(e, base, knob); });
+            base.addEventListener('touchmove', (e) => { e.preventDefault(); if(joystick.active) handleJoystickMove(e, base, knob); });
+            base.addEventListener('touchend', (e) => { e.preventDefault(); joystick.active = false; joystick.dx = 0; joystick.dy = 0; knob.style.transform = `translate(0px, 0px)`; });
+        }
+        function handleJoystickMove(e, base, knob) {
+            const touch = e.touches[0]; const rect = base.getBoundingClientRect(); const centerX = rect.left + rect.width / 2; const centerY = rect.top + rect.height / 2;
+            let dx = touch.clientX - centerX; let dy = touch.clientY - centerY;
+            const dist = Math.sqrt(dx*dx + dy*dy); const maxDist = rect.width / 2;
+            if(dist > maxDist) { dx = (dx/dist)*maxDist; dy = (dy/dist)*maxDist; }
+            knob.style.transform = `translate(${dx}px, ${dy}px)`; joystick.dx = dx / maxDist; joystick.dy = dy / maxDist;
+        }
+
+        /* =======================================================
+           ADMIN SYSTEM ULTIMATE
+           ======================================================= */
+        let ctrlTargetID = null;
+        let adminChatTargetID = null;
+
+        window.toggleGhostMode = () => { isGhostMode = document.getElementById('chk-ghost-mode').checked; localStorage.setItem('adm_ghost', isGhostMode); showToast(isGhostMode ? "👻 تم تفعيل الشبح" : "👻 تم إلغاء الشبح", "info"); }
+        if(isGhostMode) document.getElementById('chk-ghost-mode').checked = true;
+
+        window.verifyAdmin = () => { 
+            if(document.getElementById('adm-pass-input').value === 'yoyo020118') { 
+                closeAll(); 
+                document.getElementById('admin-main-panel').style.display = 'flex'; 
+                isAdminLoggedIn = true; 
+                showToast("أهلاً بك أيها الأدمن!", "success");
+                initAdminSystem(); 
+            } else {
+                showToast("رمز خاطئ!", "error"); 
+            }
+        }
+        window.switchAdmTab = (tab) => { document.querySelectorAll('.adm-section').forEach(s => s.classList.remove('active')); document.querySelectorAll('.adm-nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('adm-tab-'+tab).classList.add('active'); event.target.classList.add('active'); }
+
+        function initAdminSystem() {
+            get(ref(db, 'siteConfig')).then(snap => {
+                const config = snap.val() || {};
+                if(config.title) document.getElementById('set-site-title').value = config.title;
+                if(config.welcomeMsg) document.getElementById('set-welcome-msg').value = config.welcomeMsg;
+                if(config.themeColor) document.getElementById('set-theme-color').value = config.themeColor;
+                if(config.dailyBonus) document.getElementById('set-daily-bonus').value = config.dailyBonus;
+                if(config.breakingNews) document.getElementById('set-breaking-news').value = config.breakingNews;
+                if(config.maintenance) document.getElementById('set-maintenance').checked = true;
+                if(config.game) { document.getElementById('gm-speed').value=config.game.speed; document.getElementById('gm-dmg').value=config.game.dmg; document.getElementById('gm-hp').value=config.game.hp; }
+                if(config.shop) { document.getElementById('shp-gold').value=config.shop.gold; document.getElementById('shp-red').value=config.shop.red; document.getElementById('shp-blue').value=config.shop.blue; document.getElementById('shp-vip').value=config.shop.vip; }
+            });
+
+            onValue(ref(db, 'onlineUsers'), (snap) => {
+                const listContainer = document.getElementById('admin-online-list');
+                const onlineData = snap.val() || {};
+                document.getElementById('adm-online-count').innerText = Object.keys(onlineData).length;
+                listContainer.innerHTML = '';
+                Object.keys(onlineData).forEach(uid => {
+                    get(ref(db, 'users/'+uid)).then(uSnap => {
+                        const u = uSnap.val() || {name: 'Unknown', coins: 0};
+                        const row = document.createElement('div'); 
+                        row.className = 'online-user-row';
+                        row.innerHTML = `<div style="flex:1;"><div style="font-weight:bold; color:white;">${u.name} <span class="online-status"></span></div><div style="font-size:10px; color:#777;">${uid}</div></div><div style="display:flex; align-items:center; gap:10px;"><span style="color:gold;">💰 ${u.coins}</span><button class="btn-ctrl-user" onclick="openCtrlBrowser('${uid}', '${u.name}', ${u.coins})">⚙️ تحكم</button></div>`;
+                        listContainer.appendChild(row);
+                    });
+                });
+            });
+
+            onValue(query(ref(db, 'globalChat'), limitToLast(20)), (snap) => {
+                const div = document.getElementById('chat-monitor-area'); div.innerHTML='';
+                snap.forEach(c => {
+                    const m = c.val();
+                    const d = document.createElement('div'); d.className='monitor-msg-row';
+                    d.innerHTML = `<div style="flex:1; color:white; font-size:12px;"><b>${m.name}:</b> ${m.text}</div><div class="monitor-actions"><button class="btn-del-msg" onclick="deleteGlobalMsg('${c.key}')">❌ حذف</button><button class="btn-ban-user" onclick="openCtrlBrowser('${m.senderID}', '${m.name}', 0)">🚫 تحكم</button></div>`;
+                    div.appendChild(d);
+                });
+            });
+
+            onValue(query(ref(db, 'logs/transactions'), limitToLast(20)), (snap) => {
+                const tbody = document.getElementById('logs-table-body'); tbody.innerHTML='';
+                snap.forEach(c => { const l = c.val(); const tr = document.createElement('tr'); tr.innerHTML = `<td>${l.from}</td><td>${l.to}</td><td>${l.amount}</td><td>${new Date(l.time).toLocaleTimeString()}</td>`; tbody.appendChild(tr); });
+            });
+
+            onValue(query(ref(db, 'logs/adminActions'), limitToLast(20)), (snap) => {
+                const ul = document.getElementById('admin-actions-log'); ul.innerHTML='';
+                snap.forEach(c => { const l = c.val(); const li = document.createElement('li'); li.innerText = `${l.action} - ${new Date(l.time).toLocaleTimeString()}`; ul.appendChild(li); });
+            });
+
+            onValue(ref(db, 'promoCodes'), snap => {
+                const div = document.getElementById('codes-list'); div.innerHTML='';
+                if(snap.val()) Object.keys(snap.val()).forEach(key => {
+                    const val = snap.val()[key];
+                    const d = document.createElement('div'); d.style.padding='5px'; d.style.borderBottom='1px solid #333';
+                    d.innerHTML = `<span>${key} (${val.value})</span> <button onclick="deleteCode('${key}')" style="background:red;font-size:10px;padding:2px;">X</button>`;
+                    div.appendChild(d);
+                });
+            });
+            loadSupportListAndNotifications();
+        }
+
+        function logAdminAction(action) { push(ref(db, 'logs/adminActions'), { action: action, time: Date.now() }); }
+
+        window.saveSiteConfig = () => {
+            const updates = {
+                title: document.getElementById('set-site-title').value,
+                welcomeMsg: document.getElementById('set-welcome-msg').value,
+                themeColor: document.getElementById('set-theme-color').value,
+                dailyBonus: document.getElementById('set-daily-bonus').value,
+                breakingNews: document.getElementById('set-breaking-news').value,
+                maintenance: document.getElementById('set-maintenance').checked
+            };
+            update(ref(db, 'siteConfig'), updates).then(() => { logAdminAction('Updated Site Config'); showToast("Saved!", "success"); });
+        }
+
+        window.saveGameConfig = () => { update(ref(db, 'siteConfig/game'), { speed: document.getElementById('gm-speed').value, dmg: document.getElementById('gm-dmg').value, hp: document.getElementById('gm-hp').value }).then(() => showToast("Game Updated!", "success")); }
+        window.saveShopConfig = () => { update(ref(db, 'siteConfig/shop'), { gold: document.getElementById('shp-gold').value, red: document.getElementById('shp-red').value, blue: document.getElementById('shp-blue').value, vip: document.getElementById('shp-vip').value }).then(() => showToast("Shop Updated!", "success")); }
+        window.createPromoCode = () => { const code = document.getElementById('new-code-name').value.trim(); const val = document.getElementById('new-code-val').value; if(code && val) set(ref(db, 'promoCodes/'+code), { value: parseInt(val) }); }
+        window.deleteCode = (c) => remove(ref(db, 'promoCodes/'+c));
+
+        window.openCtrlBrowser = (uid, name, coins) => { 
+            get(ref(db, 'users/'+uid+'/coins')).then(s => {
+                const currentCoins = s.val() || 0;
+                ctrlTargetID = uid; 
+                document.getElementById('ctrl-target-name').innerText = name; 
+                document.getElementById('ctrl-target-id').innerText = uid; 
+                document.getElementById('ctrl-target-coins').innerText = currentCoins; 
+                document.getElementById('user-control-browser').style.display = 'flex'; 
+            });
+        }
+        window.closeCtrlBrowser = () => { document.getElementById('user-control-browser').style.display = 'none'; ctrlTargetID = null; }
+        
+        window.modifyTargetCoins = (multiplier) => { 
+            if(!ctrlTargetID) return; const amtStr = document.getElementById('ctrl-amount-input').value; if(!amtStr) return showToast("أدخل الكمية", "error"); 
+            const amount = parseInt(amtStr) * multiplier; 
+            get(ref(db, 'users/'+ctrlTargetID+'/coins')).then(s => { 
+                const current = s.val() || 0; const newBal = current + amount; 
+                update(ref(db, 'users/'+ctrlTargetID), { coins: newBal, alert: amount > 0 ? `🎁 أدمن: تم منحك ${amount} جوهرة` : `⚠️ أدمن: تم خصم ${Math.abs(amount)} جوهرة` }); 
+                document.getElementById('ctrl-target-coins').innerText = newBal; 
+                logAdminAction(`Modified coins for ${ctrlTargetID} by ${amount}`);
+                showToast("تم التعديل!", "success"); 
+            }); 
+        }
+        
+        window.banTargetUser = () => { if(!ctrlTargetID) return; if(confirm("حظر اللاعب نهائياً؟")) { update(ref(db, 'users/'+ctrlTargetID), { banned: true }); logAdminAction(`Banned ${ctrlTargetID}`); showToast("تم الحظر", "success"); } }
+        window.freezeTargetUser = () => { if(!ctrlTargetID) return; if(confirm("تجميد حساب اللاعب؟")) { update(ref(db, 'users/'+ctrlTargetID), { frozen: true, alert: "❄️ تم تجميد حسابك مؤقتاً" }); logAdminAction(`Froze ${ctrlTargetID}`); showToast("تم التجميد", "success"); } }
+        window.unbanTargetUser = () => { if(!ctrlTargetID) return; if(confirm("فك العقوبات؟")) { update(ref(db, 'users/'+ctrlTargetID), { banned: false, frozen: false }); logAdminAction(`Unbanned/Unfroze ${ctrlTargetID}`); showToast("تم فك الحظر", "success"); } }
+        window.muteTargetUser = () => { if(!ctrlTargetID) return; update(ref(db, 'users/'+ctrlTargetID), { mutedUntil: Date.now() + 3600000 }); showToast("تم كتم اللاعب لساعة", "info"); }
+        window.unmuteTargetUser = () => { if(!ctrlTargetID) return; update(ref(db, 'users/'+ctrlTargetID), { mutedUntil: 0 }); showToast("تم إلغاء الكتم", "info"); }
+        window.clearGlobalChat = () => { if(confirm("هل أنت متأكد من مسح الشات بالكامل؟")) { remove(ref(db, 'globalChat')); logAdminAction('Cleared Chat'); } }
+        window.deleteGlobalMsg = (key) => { if(confirm("حذف هذه الرسالة فقط؟")) remove(ref(db, 'globalChat/'+key)); }
+        window.lockGlobalChat = () => update(ref(db, 'siteConfig'), { chatLocked: true });
+        window.unlockGlobalChat = () => update(ref(db, 'siteConfig'), { chatLocked: false });
+        window.sendPopupAlert = () => { const msg = document.getElementById('popup-msg-input').value; if(msg) update(ref(db, 'siteConfig/popupAlert'), { msg: msg, time: Date.now() }); showToast("Sent!", "success"); }
+
+        function loadSupportListAndNotifications() {
+            onValue(ref(db, 'users'), s => {
+                const div = document.getElementById('support-users-list'); div.innerHTML = '';
+                let usersWithMessages = []; let globalUnread = 0;
+                if(s.val()) {
+                    Object.keys(s.val()).forEach(uid => { const u = s.val()[uid]; if(u.messages) { const msgs = Object.values(u.messages); const lastMsg = msgs[msgs.length-1]; usersWithMessages.push({ uid: uid, name: u.name, lastTime: lastMsg.timestamp, lastSender: lastMsg.sender }); } });
+                    usersWithMessages.sort((a,b) => b.lastTime - a.lastTime);
+                    usersWithMessages.forEach(user => {
+                        const btn = document.createElement('div'); btn.className = 'chat-list-item';
+                        if(user.uid === adminChatTargetID) btn.classList.add('active');
+                        btn.onclick = () => { adminChatTargetID = user.uid; loadAdminChat(user.uid, user.name); };
+                        let unreadBadge = ''; if(user.lastSender === 'user') { unreadBadge = `<div class="unread-badge" style="display:block"></div>`; globalUnread++; playSound('notif'); }
+                        btn.innerHTML = `${unreadBadge}<strong>${user.name}</strong><br><small style="color:#777">${new Date(user.lastTime).toLocaleTimeString()}</small>`; div.appendChild(btn);
+                    });
+                }
+                const gBadge = document.getElementById('global-support-badge'); if(globalUnread > 0) { gBadge.style.display = 'block'; gBadge.innerText = globalUnread; } else gBadge.style.display = 'none';
+            });
+        }
+        function loadAdminChat(uid, name) { if(adminChatTargetID) off(ref(db, 'users/'+adminChatTargetID+'/messages')); adminChatTargetID = uid; document.getElementById('adm-chat-header').innerText = "مع: " + name; const chatBox = document.getElementById('adm-chat-box'); chatBox.innerHTML = 'loading...'; onValue(ref(db, 'users/'+uid+'/messages'), snap => { renderChat(chatBox, snap.val()); }); }
+        window.sendAdminReply = () => { const txt = document.getElementById('adm-chat-reply').value; if(!txt || !adminChatTargetID) return; push(ref(db, 'users/'+adminChatTargetID+'/messages'), { sender: 'admin', text: txt, timestamp: Date.now() }); document.getElementById('adm-chat-reply').value = ''; }
+        function renderChat(el, msgs) { el.innerHTML = ''; if(!msgs) return; Object.values(msgs).forEach(m => { const d = document.createElement('div'); let cl = (m.sender==='user') ? 'msg-user' : 'msg-admin'; d.className = `msg-bubble ${cl}`; d.innerHTML = `${m.text}`; el.appendChild(d); }); el.scrollTop = el.scrollHeight; }
+
+        window.openSupport = () => { document.getElementById('user-chat-modal').style.display='flex'; document.getElementById('support-dot').style.display='none'; }
+        window.openSettings = () => { 
+            document.getElementById('settings-modal').style.display='flex'; 
+            document.getElementById('input-name').value = myData.name; 
+            document.getElementById('input-bio').value = myData.bio || "";
+        }
+        window.saveName = () => { 
+            const newName = document.getElementById('input-name').value;
+            const newBio = document.getElementById('input-bio').value;
+            if(newName){ 
+                myData.name = newName; 
+                myData.bio = newBio || "";
+                saveToServer(); 
+                showToast("تم حفظ الملف الشخصي", "success"); 
+                closeAll();
+            } 
+        }
+        window.watchAd = (s,r) => { document.getElementById('ad-timer').style.display='block'; setTimeout(()=>{document.getElementById('ad-timer').style.display='none';myData.coins+=r;saveToServer();showToast("+"+r, "success")},s*100); }
+        window.buyAcc = () => { if(myData.coins>=shopPrices.vip){myData.coins-=shopPrices.vip;myData.bought=true;saveToServer();}else showToast("تحتاج "+shopPrices.vip, "error"); }
+        window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('active');
+        window.nav = (p) => { document.querySelectorAll('.page').forEach(x=>x.classList.remove('active')); document.getElementById(p).classList.add('active'); document.getElementById('sidebar').classList.remove('active'); if(p==='leaderboard') loadLeaderboard(); }
+        window.closeAll = () => document.querySelectorAll('.modal').forEach(x=>x.style.display='none');
     </script>
 </body>
 </html>
