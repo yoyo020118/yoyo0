@@ -185,13 +185,6 @@
         .alert-box { background: linear-gradient(135deg, #000, #333); border: 2px solid red; padding: 30px; text-align: center; border-radius: 20px; box-shadow: 0 0 50px red; animation: popIn 0.5s; }
         @keyframes popIn { from{transform:scale(0)} to{transform:scale(1)} }
 
-        /* Google Btn Style */
-        .google-btn {
-            background: white; color: #444; width: 80%; border: none; padding: 10px; border-radius: 5px; 
-            font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;
-        }
-        .google-btn img { width: 20px; }
-
     </style>
 </head>
 <body class="ar">
@@ -282,18 +275,6 @@
             <h1 id="site-title-display" style="font-size:3em; color:var(--primary); text-shadow: 2px 2px 0 #000;">YOYO V24</h1>
             <p id="site-welcome-display" style="color:#ddd">Ultra Edition 🚀</p>
             
-            <!-- أزرار جوجل (جديدة) -->
-            <center>
-                <div id="google-login-container">
-                    <button class="google-btn" onclick="loginGoogle()">
-                        <img src="https://cdn-icons-png.flaticon.com/512/300/300221.png"> تسجيل دخول جوجل
-                    </button>
-                </div>
-                <div id="google-logout-container" style="display:none; margin-bottom:10px;">
-                    <button class="btn-main" style="background:#e74c3c; width:80%;" onclick="logoutGoogle()">تسجيل خروج</button>
-                </div>
-            </center>
-
             <button id="btn-daily" class="btn-main" style="background:linear-gradient(45deg, gold, orange); color:black; width:80%; margin-bottom:20px;" onclick="claimDaily()">🎁 المكافأة اليومية</button>
             <p id="streak-info" style="font-size:12px; color:gold; margin-top:-10px;">أيام متتالية: <span id="streak-count">0</span></p>
 
@@ -629,8 +610,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getDatabase, ref, set, onValue, push, update, get, onDisconnect, remove, query, orderByChild, limitToLast, off } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
-        // --- إضافة Auth Import ---
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCdQfqqUY0aIUtsHQcGrlUdvsN_znvvGYk",
@@ -643,7 +622,6 @@
         };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const auth = getAuth(app); // Init Auth
 
         window.playSound = (id) => { const a=document.getElementById('snd-'+id); if(a){a.currentTime=0; a.play().catch(e=>{});} }
 
@@ -690,42 +668,6 @@
             "https://api.dicebear.com/7.x/bottts/svg?seed=1",
             "https://api.dicebear.com/7.x/bottts/svg?seed=2"
         ];
-
-        // --- Google Login Logic ---
-        window.loginGoogle = () => {
-            const provider = new GoogleAuthProvider();
-            signInWithPopup(auth, provider)
-                .then((result) => {
-                    showToast("تم تسجيل الدخول بنجاح!", "success");
-                    // الصفحه ستحدث البيانات تلقائياً عبر onAuthStateChanged
-                    location.reload(); // لضمان تحديث كل المتغيرات
-                }).catch((error) => {
-                    showToast(error.message, "error");
-                });
-        }
-
-        window.logoutGoogle = () => {
-            signOut(auth).then(() => {
-                showToast("تم الخروج", "info");
-                location.reload();
-            });
-        }
-
-        // مراقب حالة الدخول
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // مستخدم جوجل
-                myID = user.uid; // استخدام معرف جوجل
-                document.getElementById('google-login-container').style.display = 'none';
-                document.getElementById('google-logout-container').style.display = 'block';
-                connectUser(); // إعادة الاتصال بالمعرف الجديد
-            } else {
-                // مستخدم زائر (Guest)
-                document.getElementById('google-login-container').style.display = 'block';
-                document.getElementById('google-logout-container').style.display = 'none';
-                connectUser(); // الاتصال بمعرف التخزين المحلي
-            }
-        });
 
         // Connection & Ghost Mode Logic
         onValue(ref(db, ".info/connected"), (s) => { 
@@ -814,6 +756,9 @@
                 } else update(myRef, myData);
             });
         }
+        
+        // استدعاء الاتصال مباشرة لأننا ألغينا جوجل
+        connectUser();
 
         // Chat
         const gChatRef = ref(db, 'globalChat');
